@@ -1,0 +1,3 @@
+Z /etc/keystone/* 0640 root keystone
+z /etc/keystone 0750 root keystone 
+d /var/lib/keystone - keystone keystone - -

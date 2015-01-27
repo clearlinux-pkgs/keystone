@@ -1,0 +1,218 @@
+From 571c38f1607dc4ce7a714f5a15fa253f0bed0a16 Mon Sep 17 00:00:00 2001
+From: Victor Morales <victor.morales@intel.com>
+Date: Tue, 23 Jun 2015 18:22:46 -0500
+Subject: [PATCH 3/4] Integrate OSprofiler in Keystone
+
+-Add settings for OSprofiler wsgi middleware, This middleware is used
+for 2 things:
+1) It checks that person who want to trace is trusted and knows
+secret HMAC key (that is specified in paste.ini).
+2) It initalize profiler in case of proper trace headers
+and add first wsgi trace point, with info about HTTP request.
+
+*) Init profiler on start in both cases (httpd or eventlet)
+*) Adding new conf group for profiler (to enable/disable)
+*) Adding trace point for all DB (sql) calls
+*) By default osprofiler is disabled
+
+To test:
+
+$ . amdminrc # you should be admin user/tenant to fetch profiling data
+$ keystone --profile SECRET_KEY user-list
+$ osprofiler trace show --html --out result.html <TRACE_ID>
+
+Signed-off-by: Victor Morales <victor.morales@intel.com>
+---
+ etc/keystone-paste.ini      |  9 +++++++--
+ keystone/common/config.py   |  6 ++++++
+ keystone/common/profiler.py | 41 +++++++++++++++++++++++++++++++++++++++++
+ keystone/common/sql/core.py |  4 ++++
+ keystone/notifications.py   |  5 +++++
+ keystone/server/eventlet.py |  4 ++++
+ keystone/server/wsgi.py     |  4 ++++
+ requirements.txt            |  1 +
+ 8 files changed, 72 insertions(+), 2 deletions(-)
+ create mode 100644 keystone/common/profiler.py
+
+diff --git a/etc/keystone-paste.ini b/etc/keystone-paste.ini
+index 3e195aa..648487f 100644
+--- a/etc/keystone-paste.ini
++++ b/etc/keystone-paste.ini
+@@ -88,10 +88,10 @@ paste.app_factory = keystone.service:public_version_app_factory
+ paste.app_factory = keystone.service:admin_version_app_factory
+ 
+ [pipeline:public_version_api]
+-pipeline = sizelimit url_normalize public_version_service
++pipeline = sizelimit osprofiler url_normalize public_version_service
+ 
+ [pipeline:admin_version_api]
+-pipeline = sizelimit url_normalize admin_version_service
++pipeline = sizelimit osprofiler url_normalize admin_version_service
+ 
+ [composite:main]
+ use = egg:Paste#urlmap
+@@ -104,3 +104,8 @@ use = egg:Paste#urlmap
+ /v2.0 = admin_api
+ /v3 = api_v3
+ / = admin_version_api
++
++[filter:osprofiler]
++paste.filter_factory = osprofiler.web:WsgiMiddleware.factory
++hmac_keys = SECRET_KEY
++enabled = yes 
+diff --git a/keystone/common/config.py b/keystone/common/config.py
+index c725026..d8e2b0c 100644
+--- a/keystone/common/config.py
++++ b/keystone/common/config.py
+@@ -1082,6 +1082,12 @@ FILE_OPTIONS = {
+                     deprecated_for_removal=True,
+                     help='Require client certificate.'),
+     ],
++    'profiler': [
++        cfg.BoolOpt("enabled", default=False,
++                    help='If False fully disable profiling feature.'),
++        cfg.BoolOpt("trace_sqlalchemy", default=False,
++                    help="If False doesn't trace SQL requests.")
++    ],
+ }
+ 
+ 
+diff --git a/keystone/common/profiler.py b/keystone/common/profiler.py
+new file mode 100644
+index 0000000..b4c1357
+--- /dev/null
++++ b/keystone/common/profiler.py
+@@ -0,0 +1,41 @@
++#    Licensed under the Apache License, Version 2.0 (the "License"); you may
++#    not use this file except in compliance with the License. You may obtain
++#    a copy of the License at
++#
++#         http://www.apache.org/licenses/LICENSE-2.0
++#
++#    Unless required by applicable law or agreed to in writing, software
++#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
++#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
++#    License for the specific language governing permissions and limitations
++#    under the License.
++
++import logging
++
++import osprofiler.notifier
++import oslo_messaging
++
++from keystone import config
++from keystone import notifications
++
++
++CONF = config.CONF
++LOG = logging.getLogger(__name__)
++
++
++def setup(name, host='0.0.0.0'):
++
++    if CONF.profiler.enabled:
++        _notifier = osprofiler.notifier.create(
++            "Messaging", oslo_messaging, {},
++            notifications.get_transport(), "keystone", name, host)
++        osprofiler.notifier.set(_notifier)
++        LOG.info("OSProfiler is enabled.\nIt means that person who knows "
++                 "any of hmac_keys that are specified in "
++                 "/etc/keystone-paste.ini can trace his requests. \n"
++                 "In real life only operator can read this file so there "
++                 "is no security issue. Note that even if person can "
++                 "trigger profiler, only admin user can retrieve trace "
++                 "information.\n"
++                 "To disable OSprofiler set in keystone.conf:\n"
++                 "[profiler]\nenabled=false")
+diff --git a/keystone/common/sql/core.py b/keystone/common/sql/core.py
+index bf16870..78c9e65 100644
+--- a/keystone/common/sql/core.py
++++ b/keystone/common/sql/core.py
+@@ -28,6 +28,7 @@ from oslo_db.sqlalchemy import models
+ from oslo_db.sqlalchemy import session as db_session
+ from oslo_log import log
+ from oslo_serialization import jsonutils
++import osprofiler.sqlalchemy
+ import six
+ import sqlalchemy as sql
+ from sqlalchemy.ext import declarative
+@@ -174,6 +175,9 @@ def _get_engine_facade():
+ 
+     if not _engine_facade:
+         _engine_facade = db_session.EngineFacade.from_config(CONF)
++        if CONF.profiler.enabled and CONF.profiler.trace_sqlalchemy:
++            osprofiler.sqlalchemy.add_tracing(sql, _engine_facade.get_engine(),
++                                              "db")
+ 
+     return _engine_facade
+ 
+diff --git a/keystone/notifications.py b/keystone/notifications.py
+index 6af93a7..baa66eb 100644
+--- a/keystone/notifications.py
++++ b/keystone/notifications.py
+@@ -308,6 +308,11 @@ def notify_event_callbacks(service, resource_type, operation, payload):
+                 cb(service, resource_type, operation, payload)
+ 
+ 
++def get_transport():
++    """Return transport object."""
++    return oslo_messaging.get_transport(CONF)
++
++
+ def _get_notifier():
+     """Return a notifier object.
+ 
+diff --git a/keystone/server/eventlet.py b/keystone/server/eventlet.py
+index 5bedaf9..a7f7394 100644
+--- a/keystone/server/eventlet.py
++++ b/keystone/server/eventlet.py
+@@ -31,6 +31,7 @@ oslo_i18n.enable_lazy()
+ 
+ 
+ from keystone.common import environment
++from keystone.common import profiler
+ from keystone.common import utils
+ from keystone import config
+ from keystone.i18n import _
+@@ -65,6 +66,9 @@ def create_server(conf, name, host, port, workers):
+     server = environment.Server(app, host=host, port=port,
+                                 keepalive=CONF.eventlet_server.tcp_keepalive,
+                                 keepidle=CONF.eventlet_server.tcp_keepidle)
++
++    profiler.setup(name, host)
++
+     if CONF.eventlet_server_ssl.enable:
+         server.set_ssl(CONF.eventlet_server_ssl.certfile,
+                        CONF.eventlet_server_ssl.keyfile,
+diff --git a/keystone/server/wsgi.py b/keystone/server/wsgi.py
+index 863f13b..a17b222 100644
+--- a/keystone/server/wsgi.py
++++ b/keystone/server/wsgi.py
+@@ -26,6 +26,7 @@ oslo_i18n.enable_lazy()
+ 
+ 
+ from keystone.common import environment
++from keystone.common import profiler
+ from keystone import config
+ from keystone.server import common
+ from keystone import service as keystone_service
+@@ -49,4 +50,7 @@ def initialize_application(name):
+ 
+     _unused, application = common.setup_backends(
+         startup_application_fn=loadapp)
++
++    profiler.setup(name, CONF.eventlet_server.public_bind_host)
++
+     return application
+diff --git a/requirements.txt b/requirements.txt
+index 6f6c26b..cb69e6f 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -35,3 +35,4 @@ jsonschema<3.0.0,>=2.0.0
+ pycadf<0.9.0,>=0.8.0
+ posix-ipc
+ msgpack-python>=0.4.0
++osprofiler>=0.3.0
+-- 
+2.1.0
+
