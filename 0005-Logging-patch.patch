@@ -1,0 +1,909 @@
+From b7fc990bda452e37a8bdf69b55c46227529da7b9 Mon Sep 17 00:00:00 2001
+From: Victor Morales <victor.morales@intel.com>
+Date: Thu, 20 Aug 2015 17:27:35 -0500
+Subject: [PATCH] Logging patch
+
+Signed-off-by: Victor Morales <victor.morales@intel.com>
+---
+ keystone/common/controller.py | 106 ++++++++++++++++++++++++++++++++++++++++--
+ keystone/common/kvs/core.py   |  56 ++++++++++++++++++++++
+ keystone/common/profiler.py   |   2 +-
+ 3 files changed, 158 insertions(+), 6 deletions(-)
+
+diff --git a/keystone/common/controller.py b/keystone/common/controller.py
+index 5667eff..35d7406 100644
+--- a/keystone/common/controller.py
++++ b/keystone/common/controller.py
+@@ -35,6 +35,7 @@ CONF = cfg.CONF
+ 
+ 
+ def v2_deprecated(f):
++    LOG.debug("0Speedy Gonzalez")
+     """No-op decorator in preparation for deprecating Identity API v2.
+ 
+     This is a placeholder for the pending deprecation of v2. The implementation
+@@ -49,10 +50,12 @@ def v2_deprecated(f):
+             in_favor_of='v3 API')
+ 
+     """
++    LOG.debug("1SpeedyGonzalez")
+     return f
+ 
+ 
+ def _build_policy_check_credentials(self, action, context, kwargs):
++    LOG.debug("0Speedy Gonzalez")
+     kwargs_str = ', '.join(['%s=%s' % (k, kwargs[k]) for k in kwargs])
+     kwargs_str = strutils.mask_password(kwargs_str)
+ 
+@@ -64,6 +67,7 @@ def _build_policy_check_credentials(self, action, context, kwargs):
+     if ('environment' in context and
+             authorization.AUTH_CONTEXT_ENV in context['environment']):
+         LOG.debug('RBAC: using auth context from the request environment')
++        LOG.debug("1Speedy Gonzalez")
+         return context['environment'].get(authorization.AUTH_CONTEXT_ENV)
+ 
+     # There is no current auth context, build it from the incoming token.
+@@ -79,16 +83,19 @@ def _build_policy_check_credentials(self, action, context, kwargs):
+         # function it would otherwise need to reload the token_ref from
+         # backing store.
+         wsgi.validate_token_bind(context, token_ref)
++        LOG.debug("1Speedy Gonzalez")
+     except exception.TokenNotFound:
+         LOG.warning(_LW('RBAC: Invalid token'))
++        LOG.debug("1Speedy Gonzalez")
+         raise exception.Unauthorized()
+ 
+     auth_context = authorization.token_to_auth_context(token_ref)
+-
++    LOG.debug("1Speedy Gonzalez")
+     return auth_context
+ 
+ 
+ def protected(callback=None):
++    LOG.debug("0Speedy Gonzalez")
+     """Wraps API calls with role based access controls (RBAC).
+ 
+     This handles both the protection of the API parameters as well as any
+@@ -104,6 +111,7 @@ def protected(callback=None):
+     def wrapper(f):
+         @functools.wraps(f)
+         def inner(self, context, *args, **kwargs):
++            LOG.debug("0Speedy Gonzalez")
+             if 'is_admin' in context and context['is_admin']:
+                 LOG.warning(_LW('RBAC: Bypassing authorization'))
+             elif callback is not None:
+@@ -159,6 +167,7 @@ def protected(callback=None):
+                                         action,
+                                         utils.flatten_dict(policy_dict))
+                 LOG.debug('RBAC: Authorization granted')
++            LOG.debug("1Speedy Gonzalez")
+             return f(self, context, *args, **kwargs)
+         return inner
+     return wrapper
+@@ -170,6 +179,7 @@ def filterprotected(*filters):
+     def _filterprotected(f):
+         @functools.wraps(f)
+         def wrapper(self, context, **kwargs):
++            LOG.debug("0Speedy Gonzalez")
+             if not context['is_admin']:
+                 action = 'identity:%s' % f.__name__
+                 creds = _build_policy_check_credentials(self, action,
+@@ -203,6 +213,7 @@ def filterprotected(*filters):
+                 LOG.debug('RBAC: Authorization granted')
+             else:
+                 LOG.warning(_LW('RBAC: Bypassing authorization'))
++            LOG.debug("1Speedy Gonzalez")
+             return f(self, context, filters, **kwargs)
+         return wrapper
+     return _filterprotected
+@@ -211,6 +222,7 @@ def filterprotected(*filters):
+ class V2Controller(wsgi.Application):
+     """Base controller class for Identity API v2."""
+     def _normalize_domain_id(self, context, ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Fill in domain_id since v2 calls are not domain-aware.
+ 
+         This will overwrite any domain_id that was inadvertently
+@@ -218,16 +230,20 @@ class V2Controller(wsgi.Application):
+ 
+         """
+         ref['domain_id'] = CONF.identity.default_domain_id
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def filter_domain_id(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Remove domain_id since v2 calls are not domain-aware."""
+         ref.pop('domain_id', None)
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def filter_domain(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Remove domain since v2 calls are not domain-aware.
+ 
+         V3 Fernet tokens builds the users with a domain in the token data.
+@@ -237,19 +253,24 @@ class V2Controller(wsgi.Application):
+         """
+         if 'domain' in ref:
+             if ref['domain'].get('id') != CONF.identity.default_domain_id:
++                LOG.debug("1Speedy Gonzalez")
+                 raise exception.Unauthorized(
+                     _('Non-default domain is not supported'))
+             del ref['domain']
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def filter_project_parent_id(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Remove parent_id since v2 calls are not hierarchy-aware."""
+         ref.pop('parent_id', None)
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def normalize_username_in_response(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Adds username to outgoing user refs to match the v2 spec.
+ 
+         Internally we use `name` to represent a user's name. The v2 spec
+@@ -258,10 +279,12 @@ class V2Controller(wsgi.Application):
+         """
+         if 'username' not in ref and 'name' in ref:
+             ref['username'] = ref['name']
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def normalize_username_in_request(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Adds name in incoming user refs to match the v2 spec.
+ 
+         Internally we use `name` to represent a user's name. The v2 spec
+@@ -270,10 +293,12 @@ class V2Controller(wsgi.Application):
+         """
+         if 'name' not in ref and 'username' in ref:
+             ref['name'] = ref.pop('username')
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def v3_to_v2_user(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Convert a user_ref from v3 to v2 compatible.
+ 
+         * v2.0 users are not domain aware, and should have domain_id removed
+@@ -288,6 +313,7 @@ class V2Controller(wsgi.Application):
+         """
+ 
+         def _format_default_project_id(ref):
++            LOG.debug("0Speedy Gonzalez")
+             """Convert default_project_id to tenantId for v2 calls."""
+             default_project_id = ref.pop('default_project_id', None)
+             if default_project_id is not None:
+@@ -298,24 +324,31 @@ class V2Controller(wsgi.Application):
+                 # user, we remove it here.  If default_project_id is set, we
+                 # would override it in either case.
+                 del ref['tenantId']
++            LOG.debug("1Speedy Gonzalez")
+ 
+         def _normalize_and_filter_user_properties(ref):
++            LOG.debug("0Speedy Gonzalez")
+             """Run through the various filter/normalization methods."""
+             _format_default_project_id(ref)
+             V2Controller.filter_domain(ref)
+             V2Controller.filter_domain_id(ref)
+             V2Controller.normalize_username_in_response(ref)
++            LOG.debug("1Speedy Gonzalez")
+             return ref
+ 
+         if isinstance(ref, dict):
++            LOG.debug("1Speedy Gonzalez")
+             return _normalize_and_filter_user_properties(ref)
+         elif isinstance(ref, list):
++            LOG.debug("1Speedy Gonzalez")
+             return [_normalize_and_filter_user_properties(x) for x in ref]
+         else:
++            LOG.debug("1Speedy Gonzalez")
+             raise ValueError(_('Expected dict or list: %s') % type(ref))
+ 
+     @staticmethod
+     def v3_to_v2_project(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Convert a project_ref from v3 to v2.
+ 
+         * v2.0 projects are not domain aware, and should have domain_id removed
+@@ -330,19 +363,25 @@ class V2Controller(wsgi.Application):
+         """
+ 
+         def _filter_project_properties(ref):
++            LOG.debug("0Speedy Gonzalez")
+             """Run through the various filter methods."""
+             V2Controller.filter_domain_id(ref)
+             V2Controller.filter_project_parent_id(ref)
++            LOG.debug("1Speedy Gonzalez")
+             return ref
+ 
+         if isinstance(ref, dict):
++            LOG.debug("1Speedy Gonzalez")
+             return _filter_project_properties(ref)
+         elif isinstance(ref, list):
++            LOG.debug("1Speedy Gonzalez")
+             return [_filter_project_properties(x) for x in ref]
+         else:
++            LOG.debug("1Speedy Gonzalez")
+             raise ValueError(_('Expected dict or list: %s') % type(ref))
+ 
+     def format_project_list(self, tenant_refs, **kwargs):
++        LOG.debug("0Speedy Gonzalez")
+         """Format a v2 style project list, including marker/limits."""
+         marker = kwargs.get('marker')
+         first_index = 0
+@@ -354,6 +393,7 @@ class V2Controller(wsgi.Application):
+                     break
+             else:
+                 msg = _('Marker could not be found')
++                LOG.debug("1Speedy Gonzalez")
+                 raise exception.ValidationError(message=msg)
+ 
+         limit = kwargs.get('limit')
+@@ -365,6 +405,7 @@ class V2Controller(wsgi.Application):
+                     raise AssertionError()
+             except (ValueError, AssertionError):
+                 msg = _('Invalid limit value')
++                LOG.debug("1Speedy Gonzalez")
+                 raise exception.ValidationError(message=msg)
+             last_index = first_index + limit
+ 
+@@ -375,6 +416,7 @@ class V2Controller(wsgi.Application):
+                 x['enabled'] = True
+         o = {'tenants': tenant_refs,
+              'tenants_links': []}
++        LOG.debug("1Speedy Gonzalez")
+         return o
+ 
+ 
+@@ -402,6 +444,7 @@ class V3Controller(wsgi.Application):
+ 
+     @classmethod
+     def base_url(cls, context, path=None):
++        LOG.debug("0Speedy Gonzalez")
+         endpoint = super(V3Controller, cls).base_url(context, 'public')
+         if not path:
+             path = cls.collection_name
+@@ -412,18 +455,21 @@ class V3Controller(wsgi.Application):
+         # TODO(dolphm): this method of accessing the auth context is terrible,
+         # but context needs to be refactored to always have reasonable values.
+         env_context = context.get('environment', {})
++        LOG.debug("1Speedy Gonzalez")
+         return env_context.get(authorization.AUTH_CONTEXT_ENV, {})
+ 
+     @classmethod
+     def full_url(cls, context, path=None):
++        LOG.debug("0Speedy Gonzalez")
+         url = cls.base_url(context, path)
+         if context['environment'].get('QUERY_STRING'):
+             url = '%s?%s' % (url, context['environment']['QUERY_STRING'])
+-
++        LOG.debug("1Speedy Gonzalez")
+         return url
+ 
+     @classmethod
+     def query_filter_is_true(cls, filter_value):
++        LOG.debug("0Speedy Gonzalez")
+         """Determine if bool query param is 'True'.
+ 
+         We treat this the same way as we do for policy
+@@ -441,20 +487,26 @@ class V3Controller(wsgi.Application):
+             val = False
+         else:
+             val = True
++        LOG.debug("1Speedy Gonzalez")
+         return val
+ 
+     @classmethod
+     def _add_self_referential_link(cls, context, ref):
++        LOG.debug("0Speedy Gonzalez")
+         ref.setdefault('links', {})
+         ref['links']['self'] = cls.base_url(context) + '/' + ref['id']
++        LOG.debug("1Speedy Gonzalez")
+ 
+     @classmethod
+     def wrap_member(cls, context, ref):
++        LOG.debug("0Speedy Gonzalez")
+         cls._add_self_referential_link(context, ref)
++        LOG.debug("1Speedy Gonzalez")
+         return {cls.member_name: ref}
+ 
+     @classmethod
+     def wrap_collection(cls, context, refs, hints=None):
++        LOG.debug("0Speedy Gonzalez")
+         """Wrap a collection, checking for filtering and pagination.
+ 
+         Returns the wrapped collection, which includes:
+@@ -491,11 +543,12 @@ class V3Controller(wsgi.Application):
+ 
+         if list_limited:
+             container['truncated'] = True
+-
++        LOG.debug("1Speedy Gonzalez")
+         return container
+ 
+     @classmethod
+     def limit(cls, refs, hints):
++        LOG.debug("0Speedy Gonzalez")
+         """Limits a list of entities.
+ 
+         The underlying driver layer may have already truncated the collection
+@@ -514,24 +567,30 @@ class V3Controller(wsgi.Application):
+ 
+         if hints is None or hints.limit is None:
+             # No truncation was requested
++            LOG.debug("1Speedy Gonzalez")
+             return NOT_LIMITED, refs
+ 
+         if hints.limit.get('truncated', False):
+             # The driver did truncate the list
++            LOG.debug("1Speedy Gonzalez")
+             return LIMITED, refs
+ 
+         if len(refs) > hints.limit['limit']:
+             # The driver layer wasn't able to truncate it for us, so we must
+             # do it here
++            LOG.debug("1Speedy Gonzalez")
+             return LIMITED, refs[:hints.limit['limit']]
+ 
++        LOG.debug("1Speedy Gonzalez")
+         return NOT_LIMITED, refs
+ 
+     @classmethod
+     def filter_by_attributes(cls, refs, hints):
++        LOG.debug("0Speedy Gonzalez")
+         """Filters a list of references by filter values."""
+ 
+         def _attr_match(ref_attr, val_attr):
++            LOG.debug("0Speedy Gonzalez")
+             """Matches attributes allowing for booleans as strings.
+ 
+             We test explicitly for a value that defines it as 'False',
+@@ -540,11 +599,14 @@ class V3Controller(wsgi.Application):
+ 
+             """
+             if type(ref_attr) is bool:
++                LOG.debug("1Speedy Gonzalez")
+                 return ref_attr == utils.attr_as_boolean(val_attr)
+             else:
++                LOG.debug("1Speedy Gonzalez")
+                 return ref_attr == val_attr
+ 
+         def _inexact_attr_match(filter, ref):
++            LOG.debug("0Speedy Gonzalez")
+             """Applies an inexact filter to a result dict.
+ 
+             :param filter: the filter in question
+@@ -566,15 +628,19 @@ class V3Controller(wsgi.Application):
+                     target_value = target_value.lower()
+ 
+                 if comparator == 'contains':
++                    LOG.debug("1Speedy Gonzalez")
+                     return (filter_value in target_value)
+                 elif comparator == 'startswith':
++                    LOG.debug("1Speedy Gonzalez")
+                     return target_value.startswith(filter_value)
+                 elif comparator == 'endswith':
++                    LOG.debug("1Speedy Gonzalez")
+                     return target_value.endswith(filter_value)
+                 else:
+                     # We silently ignore unsupported filters
++                    LOG.debug("1Speedy Gonzalez")
+                     return True
+-
++            LOG.debug("1Speedy Gonzalez")
+             return False
+ 
+         for filter in hints.filters:
+@@ -587,11 +653,12 @@ class V3Controller(wsgi.Application):
+                 # It might be an inexact filter
+                 refs = [r for r in refs if _inexact_attr_match(
+                     filter, r)]
+-
++        LOG.debug("1Speedy Gonzalez")
+         return refs
+ 
+     @classmethod
+     def build_driver_hints(cls, context, supported_filters):
++        LOG.debug("0Speedy Gonzalez")
+         """Build list hints based on the context query string.
+ 
+         :param context: contains the query_string from which any list hints can
+@@ -604,6 +671,7 @@ class V3Controller(wsgi.Application):
+         hints = driver_hints.Hints()
+ 
+         if query_dict is None:
++            LOG.debug("1Speedy Gonzalez")
+             return hints
+ 
+         for key in query_dict:
+@@ -645,14 +713,18 @@ class V3Controller(wsgi.Application):
+         # NOTE(henry-nash): If we were to support pagination, we would pull any
+         # pagination directives out of the query_dict here, and add them into
+         # the hints list.
++        LOG.debug("1Speedy Gonzalez")
+         return hints
+ 
+     def _require_matching_id(self, value, ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Ensures the value matches the reference's ID, if any."""
+         if 'id' in ref and ref['id'] != value:
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.ValidationError('Cannot change ID')
+ 
+     def _require_matching_domain_id(self, ref_id, ref, get_member):
++        LOG.debug("0Speedy Gonzalez")
+         """Ensure the current domain ID matches the reference one, if any.
+ 
+         Provided we want domain IDs to be immutable, check whether any
+@@ -672,15 +744,19 @@ class V3Controller(wsgi.Application):
+         if CONF.domain_id_immutable and 'domain_id' in ref:
+             existing_ref = get_member(ref_id)
+             if ref['domain_id'] != existing_ref['domain_id']:
++                LOG.debug("1Speedy Gonzalez")
+                 raise exception.ValidationError(_('Cannot change Domain ID'))
+ 
+     def _assign_unique_id(self, ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Generates and assigns a unique identifier to a reference."""
+         ref = ref.copy()
+         ref['id'] = uuid.uuid4().hex
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     def _get_domain_id_for_list_request(self, context):
++        LOG.debug("0Speedy Gonzalez")
+         """Get the domain_id for a v3 list call.
+ 
+         If we running with multiple domain drivers, then the caller must
+@@ -689,9 +765,11 @@ class V3Controller(wsgi.Application):
+         """
+         if not CONF.identity.domain_specific_drivers_enabled:
+             # We don't need to specify a domain ID in this case
++            LOG.debug("1Speedy Gonzalez")
+             return
+ 
+         if context['query_string'].get('domain_id') is not None:
++            LOG.debug("1Speedy Gonzalez")
+             return context['query_string'].get('domain_id')
+ 
+         try:
+@@ -700,22 +778,27 @@ class V3Controller(wsgi.Application):
+                 token_data=self.token_provider_api.validate_token(
+                     context['token_id']))
+         except KeyError:
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.ValidationError(
+                 _('domain_id is required as part of entity'))
+         except (exception.TokenNotFound,
+                 exception.UnsupportedTokenVersionException):
+             LOG.warning(_LW('Invalid token found while getting domain ID '
+                             'for list request'))
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.Unauthorized()
+ 
+         if token_ref.domain_scoped:
++            LOG.debug("1Speedy Gonzalez")
+             return token_ref.domain_id
+         else:
+             LOG.warning(
+                 _LW('No domain information specified as part of list request'))
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.Unauthorized()
+ 
+     def _get_domain_id_from_token(self, context):
++        LOG.debug("0Speedy Gonzalez")
+         """Get the domain_id for a v3 create call.
+ 
+         In the case of a v3 create entity call that does not specify a domain
+@@ -735,15 +818,18 @@ class V3Controller(wsgi.Application):
+                     context['token_id']))
+         except KeyError:
+             # This might happen if we use the Admin token, for instance
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.ValidationError(
+                 _('A domain-scoped token must be used'))
+         except (exception.TokenNotFound,
+                 exception.UnsupportedTokenVersionException):
+             LOG.warning(_LW('Invalid token found while getting domain ID '
+                             'for list request'))
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.Unauthorized()
+ 
+         if token_ref.domain_scoped:
++            LOG.debug("1Speedy Gonzalez")
+             return token_ref.domain_id
+         else:
+             # TODO(henry-nash): We should issue an exception here since if
+@@ -752,12 +838,15 @@ class V3Controller(wsgi.Application):
+             # the current tempest heat tests issue a v3 call without this.
+             # This is raised as bug #1283539.  Once this is fixed, we
+             # should remove the line below and replace it with an error.
++            LOG.debug("1Speedy Gonzalez")
+             return CONF.identity.default_domain_id
+ 
+     def _normalize_domain_id(self, context, ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Fill in domain_id if not specified in a v3 call."""
+         if 'domain_id' not in ref:
+             ref['domain_id'] = self._get_domain_id_from_token(context)
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+@@ -766,6 +855,7 @@ class V3Controller(wsgi.Application):
+         return ref
+ 
+     def check_protection(self, context, prep_info, target_attr=None):
++        LOG.debug("0Speedy Gonzalez")
+         """Provide call protection for complex target attributes.
+ 
+         As well as including the standard parameters from the original API
+@@ -794,9 +884,11 @@ class V3Controller(wsgi.Application):
+                                     action,
+                                     utils.flatten_dict(policy_dict))
+             LOG.debug('RBAC: Authorization granted')
++            LOG.debug("1Speedy Gonzalez")
+ 
+     @classmethod
+     def check_immutable_params(cls, ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Raise exception when disallowed parameter is in ref.
+ 
+         Check whether the ref dictionary representing a request has only
+@@ -813,14 +905,17 @@ class V3Controller(wsgi.Application):
+ 
+         if not blocked_keys:
+             # No immutable parameters changed
++            LOG.debug("1Speedy Gonzalez")
+             return
+ 
+         exception_args = {'target': cls.__name__,
+                           'attributes': ', '.join(blocked_keys)}
++        LOG.debug("1Speedy Gonzalez")
+         raise exception.ImmutableAttributeError(**exception_args)
+ 
+     @classmethod
+     def filter_params(cls, ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Remove unspecified parameters from the dictionary.
+ 
+         This function removes unspecified parameters from the dictionary. See
+@@ -835,4 +930,5 @@ class V3Controller(wsgi.Application):
+         blocked_keys = ref_keys - cls._public_parameters
+         for blocked_param in blocked_keys:
+             del ref[blocked_param]
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+diff --git a/keystone/common/kvs/core.py b/keystone/common/kvs/core.py
+index cbbb746..71442c9 100644
+--- a/keystone/common/kvs/core.py
++++ b/keystone/common/kvs/core.py
+@@ -46,6 +46,7 @@ NO_VALUE = api.NO_VALUE
+ 
+ 
+ def _register_backends():
++    LOG.debug("0Speedy Gonzalez")
+     # NOTE(morganfainberg): This function exists to ensure we do not try and
+     # register the backends prior to the configuration object being fully
+     # available.  We also need to ensure we do not register a given backend
+@@ -65,6 +66,7 @@ def _register_backends():
+                       {'backend_path': backend, 'backend_name': backend_name})
+             region.register_backend(backend_name, module, cls)
+         BACKENDS_REGISTERED = True
++    LOG.debug("1Speedy Gonzalez")
+ 
+ 
+ class LockTimeout(exception.UnexpectedError):
+@@ -87,6 +89,7 @@ class KeyValueStore(object):
+ 
+     def configure(self, backing_store, key_mangler=None, proxy_list=None,
+                   locking=True, **region_config_args):
++        LOG.debug("0Speedy Gonzalez")
+         """Configure the KeyValueStore instance.
+ 
+         :param backing_store: dogpile.cache short name of the region backend
+@@ -103,6 +106,7 @@ class KeyValueStore(object):
+             # there are a lot of pitfalls and potential memory leaks that could
+             # occur.  By far the best approach is to re-create the KVS object
+             # with the new configuration.
++            LOG.debug("1Speedy Gonzalez")
+             raise RuntimeError(_('KVS region %s is already configured. '
+                                  'Cannot reconfigure.') % self._region.name)
+ 
+@@ -112,12 +116,14 @@ class KeyValueStore(object):
+         self._configure_region(backing_store, **region_config_args)
+         self._set_key_mangler(key_mangler)
+         self._apply_region_proxy(proxy_list)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     @property
+     def is_configured(self):
+         return 'backend' in self._region.__dict__
+ 
+     def _apply_region_proxy(self, proxy_list):
++        LOG.debug("0Speedy Gonzalez")
+         if isinstance(proxy_list, list):
+             proxies = []
+ 
+@@ -139,14 +145,18 @@ class KeyValueStore(object):
+                          {'proxy': proxy_cls.__name__,
+                           'name': self._region.name})
+                 self._region.wrap(proxy_cls)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     def _assert_configured(self):
++        LOG.debug("0Speedy Gonzalez")
+         if'backend' not in self._region.__dict__:
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.UnexpectedError(_('Key Value Store not '
+                                               'configured: %s'),
+                                             self._region.name)
+ 
+     def _set_keymangler_on_backend(self, key_mangler):
++            LOG.debug("0Speedy Gonzalez")
+             try:
+                 self._region.backend.key_mangler = key_mangler
+             except Exception as e:
+@@ -164,9 +174,11 @@ class KeyValueStore(object):
+                                'key_mangler for backend: %(err)s'),
+                               {'region': self._region.name, 'err': e})
+                 else:
++                    LOG.debug("1Speedy Gonzalez")
+                     raise
+ 
+     def _set_key_mangler(self, key_mangler):
++        LOG.debug("0Speedy Gonzalez")
+         # Set the key_mangler that is appropriate for the given region being
+         # configured here.  The key_mangler function is called prior to storing
+         # the value(s) in the backend.  This is to help prevent collisions and
+@@ -194,6 +206,7 @@ class KeyValueStore(object):
+                     # NOTE(morganfainberg): We failed to set the key_mangler,
+                     # we should error out here to ensure we aren't causing
+                     # key-length or collision issues.
++                    LOG.debug("1Speedy Gonzalez")
+                     raise exception.ValidationError(
+                         _('`key_mangler` option must be a function reference'))
+             else:
+@@ -210,8 +223,10 @@ class KeyValueStore(object):
+             LOG.info(_LI('KVS region %s key_mangler disabled.'),
+                      self._region.name)
+             self._set_keymangler_on_backend(None)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     def _configure_region(self, backend, **config_args):
++        LOG.debug("0Speedy Gonzalez")
+         prefix = CONF.kvs.config_prefix
+         conf_dict = {}
+         conf_dict['%s.backend' % prefix] = backend
+@@ -239,38 +254,50 @@ class KeyValueStore(object):
+         LOG.debug('KVS region configuration for %(name)s: %(config)r',
+                   {'name': self._region.name, 'config': conf_dict})
+         self._region.configure_from_config(conf_dict, '%s.' % prefix)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     def _mutex(self, key):
+         return self._lock_registry.get(key)
+ 
+     def _create_mutex(self, key):
++        LOG.debug("0Speedy Gonzalez")
+         mutex = self._region.backend.get_mutex(key)
+         if mutex is not None:
++            LOG.debug("1Speedy Gonzalez")
+             return mutex
+         else:
++            LOG.debug("1Speedy Gonzalez")
+             return self._LockWrapper(lock_timeout=self._lock_timeout)
+ 
+     class _LockWrapper(object):
+         """weakref-capable threading.Lock wrapper."""
+         def __init__(self, lock_timeout):
++            LOG.debug("0Speedy Gonzalez")
+             self.lock = threading.Lock()
+             self.lock_timeout = lock_timeout
++            LOG.debug("1Speedy Gonzalez")
+ 
+         def acquire(self, wait=True):
+             return self.lock.acquire(wait)
+ 
+         def release(self):
++            LOG.debug("0Speedy Gonzalez")
+             self.lock.release()
++            LOG.debug("1Speedy Gonzalez")
+ 
+     def get(self, key):
++        LOG.debug("0Speedy Gonzalez")
+         """Get a single value from the KVS backend."""
+         self._assert_configured()
+         value = self._region.get(key)
+         if value is NO_VALUE:
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.NotFound(target=key)
++        LOG.debug("1Speedy Gonzalez")
+         return value
+ 
+     def get_multi(self, keys):
++        LOG.debug("0Speedy Gonzalez")
+         """Get multiple values in a single call from the KVS backend."""
+         self._assert_configured()
+         values = self._region.get_multi(keys)
+@@ -283,16 +310,21 @@ class KeyValueStore(object):
+             # existent, we should raise a NotFound error to mimic the .get()
+             # method's behavior.  In all cases the internal dogpile NO_VALUE
+             # should be masked from the consumer of the KeyValueStore.
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.NotFound(target=not_found)
++        LOG.debug("1Speedy Gonzalez")
+         return values
+ 
+     def set(self, key, value, lock=None):
++        LOG.debug("0Speedy Gonzalez")
+         """Set a single value in the KVS backend."""
+         self._assert_configured()
+         with self._action_with_lock(key, lock):
+             self._region.set(key, value)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     def set_multi(self, mapping):
++        LOG.debug("0Speedy Gonzalez")
+         """Set multiple key/value pairs in the KVS backend at once.
+ 
+         Like delete_multi, this call does not serialize through the
+@@ -301,8 +333,10 @@ class KeyValueStore(object):
+         """
+         self._assert_configured()
+         self._region.set_multi(mapping)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     def delete(self, key, lock=None):
++        LOG.debug("0Speedy Gonzalez")
+         """Delete a single key from the KVS backend.
+ 
+         This method will raise NotFound if the key doesn't exist.  The get and
+@@ -314,8 +348,10 @@ class KeyValueStore(object):
+         with self._action_with_lock(key, lock):
+             self.get(key)
+             self._region.delete(key)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     def delete_multi(self, keys):
++        LOG.debug("0Speedy Gonzalez")
+         """Delete multiple keys from the KVS backend in a single call.
+ 
+         Like set_multi, this call does not serialize through the
+@@ -324,8 +360,10 @@ class KeyValueStore(object):
+         """
+         self._assert_configured()
+         self._region.delete_multi(keys)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     def get_lock(self, key):
++        LOG.debug("0Speedy Gonzalez")
+         """Get a write lock on the KVS value referenced by `key`.
+ 
+         The ability to get a context manager to pass into the set/delete
+@@ -337,9 +375,11 @@ class KeyValueStore(object):
+         self._assert_configured()
+         return KeyValueStoreLock(self._mutex(key), key, self.locking,
+                                  self._lock_timeout)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     @contextlib.contextmanager
+     def _action_with_lock(self, key, lock=None):
++        LOG.debug("0Speedy Gonzalez")
+         """Wrapper context manager to validate and handle the lock and lock
+         timeout if passed in.
+         """
+@@ -347,18 +387,23 @@ class KeyValueStore(object):
+             # NOTE(morganfainberg): Locking only matters if a lock is passed in
+             # to this method.  If lock isn't a KeyValueStoreLock, treat this as
+             # if no locking needs to occur.
++            LOG.debug("1Speedy Gonzalez")
+             yield
+         else:
+             if not lock.key == key:
++                LOG.debug("1Speedy Gonzalez")
+                 raise ValueError(_('Lock key must match target key: %(lock)s '
+                                    '!= %(target)s') %
+                                  {'lock': lock.key, 'target': key})
+             if not lock.active:
++                LOG.debug("1Speedy Gonzalez")
+                 raise exception.ValidationError(_('Must be called within an '
+                                                   'active lock context.'))
+             if not lock.expired:
++                LOG.debug("1Speedy Gonzalez")
+                 yield
+             else:
++                LOG.debug("1Speedy Gonzalez")
+                 raise LockTimeout(target=key)
+ 
+ 
+@@ -369,32 +414,40 @@ class KeyValueStoreLock(object):
+     This is only a write lock, and will not prevent reads from occurring.
+     """
+     def __init__(self, mutex, key, locking_enabled=True, lock_timeout=0):
++        LOG.debug("0Speedy Gonzalez")
+         self.mutex = mutex
+         self.key = key
+         self.enabled = locking_enabled
+         self.lock_timeout = lock_timeout
+         self.active = False
+         self.acquire_time = 0
++        LOG.debug("1Speedy Gonzalez")
+ 
+     def acquire(self):
++        LOG.debug("0Speedy Gonzalez")
+         if self.enabled:
+             self.mutex.acquire()
+             LOG.debug('KVS lock acquired for: %s', self.key)
+         self.active = True
+         self.acquire_time = time.time()
++        LOG.debug("1Speedy Gonzalez")
+         return self
+ 
+     __enter__ = acquire
+ 
+     @property
+     def expired(self):
++        LOG.debug("0Speedy Gonzalez")
+         if self.lock_timeout:
+             calculated = time.time() - self.acquire_time + LOCK_WINDOW
++            LOG.debug("1Speedy Gonzalez")
+             return calculated > self.lock_timeout
+         else:
++            LOG.debug("1Speedy Gonzalez")
+             return False
+ 
+     def release(self):
++        LOG.debug("0Speedy Gonzalez")
+         if self.enabled:
+             self.mutex.release()
+             if not self.expired:
+@@ -402,12 +455,14 @@ class KeyValueStoreLock(object):
+             else:
+                 LOG.warning(_LW('KVS lock released (timeout reached) for: %s'),
+                             self.key)
++            LOG.debug("1Speedy Gonzalez")
+ 
+     def __exit__(self, exc_type, exc_val, exc_tb):
+         self.release()
+ 
+ 
+ def get_key_value_store(name, kvs_region=None):
++    LOG.debug("0Speedy Gonzalez")
+     """Instantiate a new :class:`.KeyValueStore` or return a previous
+     instantiation that has the same name.
+     """
+@@ -420,4 +475,5 @@ def get_key_value_store(name, kvs_region=None):
+             kvs_region = region.make_region(name=name)
+         key_value_store = KeyValueStore(kvs_region)
+         KEY_VALUE_STORE_REGISTRY[name] = key_value_store
++    LOG.debug("1Speedy Gonzalez")
+     return key_value_store
+diff --git a/keystone/common/profiler.py b/keystone/common/profiler.py
+index b4c1357..dd28cc3 100644
+--- a/keystone/common/profiler.py
++++ b/keystone/common/profiler.py
+@@ -12,8 +12,8 @@
+ 
+ import logging
+ 
+-import osprofiler.notifier
+ import oslo_messaging
++import osprofiler.notifier
+ 
+ from keystone import config
+ from keystone import notifications
+-- 
+2.1.0
+

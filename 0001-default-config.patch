@@ -1,0 +1,34 @@
+From b663b791f05887bfe43d0befb593b71a76562091 Mon Sep 17 00:00:00 2001
+From: Victor Morales <victor.morales@intel.com>
+Date: Thu, 10 Sep 2015 18:57:38 -0500
+Subject: [PATCH] default config
+
+---
+ etc/keystone.conf.sample | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/etc/keystone.conf.sample b/etc/keystone.conf.sample
+index 1c2298b..9ea8001 100644
+--- a/etc/keystone.conf.sample
++++ b/etc/keystone.conf.sample
+@@ -308,7 +308,7 @@
+ # (keystone.cache.memcache_pool) or Redis (dogpile.cache.redis) be used in
+ # production deployments.  Small workloads (single process) like devstack can
+ # use the dogpile.cache.memory backend. (string value)
+-#backend = keystone.common.cache.noop
++backend = keystone.cache.memcache_pool
+ 
+ # Arguments supplied to the backend module. Specify this option once per
+ # argument to be passed to the dogpile.cache backend. Example format:
+@@ -1684,7 +1684,7 @@
+ #provider = keystone.token.providers.uuid.Provider
+ 
+ # Token persistence backend driver. (string value)
+-#driver = keystone.token.persistence.backends.sql.Token
++driver = keystone.token.persistence.backends.memcache.Token
+ 
+ # Toggle for token system caching. This has no effect unless global caching is
+ # enabled. (boolean value)
+-- 
+2.1.0
+

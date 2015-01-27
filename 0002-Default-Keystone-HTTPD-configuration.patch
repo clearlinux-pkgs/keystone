@@ -1,0 +1,53 @@
+From 92898379af1a6bccfb00684f2020d6fb1442b962 Mon Sep 17 00:00:00 2001
+From: "Munoz, Obed N" <obed.n.munoz@intel.com>
+Date: Wed, 29 Apr 2015 10:20:54 -0500
+Subject: [PATCH 2/4] Default Keystone HTTPD configuration
+
+Signed-off-by: Munoz, Obed N <obed.n.munoz@intel.com>
+---
+ httpd/wsgi-keystone.conf | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/httpd/wsgi-keystone.conf b/httpd/wsgi-keystone.conf
+index f191818..36b2cea 100644
+--- a/httpd/wsgi-keystone.conf
++++ b/httpd/wsgi-keystone.conf
+@@ -2,27 +2,27 @@ Listen 5000
+ Listen 35357
+ 
+ <VirtualHost *:5000>
+-    WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone display-name=%{GROUP}
++    WSGIDaemonProcess keystone-public processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+     WSGIProcessGroup keystone-public
+-    WSGIScriptAlias / /var/www/cgi-bin/keystone/main
++    WSGIScriptAlias /  /usr/share/httpd/cgi-bin/keystone/main
+     WSGIApplicationGroup %{GLOBAL}
+     WSGIPassAuthorization On
+     <IfVersion >= 2.4>
+       ErrorLogFormat "%{cu}t %M"
+     </IfVersion>
+-    ErrorLog /var/log/apache2/keystone.log
+-    CustomLog /var/log/apache2/keystone_access.log combined
++    ErrorLog /var/log/httpd/keystone-error_log
++    CustomLog /var/log/httpd/keystone-access_log combined
+ </VirtualHost>
+ 
+ <VirtualHost *:35357>
+-    WSGIDaemonProcess keystone-admin processes=5 threads=1 user=keystone display-name=%{GROUP}
++    WSGIDaemonProcess keystone-admin processes=5 threads=1 user=keystone group=keystone display-name=%{GROUP}
+     WSGIProcessGroup keystone-admin
+-    WSGIScriptAlias / /var/www/cgi-bin/keystone/admin
++    WSGIScriptAlias / /usr/share/httpd/cgi-bin/keystone/admin
+     WSGIApplicationGroup %{GLOBAL}
+     WSGIPassAuthorization On
+     <IfVersion >= 2.4>
+       ErrorLogFormat "%{cu}t %M"
+     </IfVersion>
+-    ErrorLog /var/log/apache2/keystone.log
+-    CustomLog /var/log/apache2/keystone_access.log combined
++    ErrorLog /var/log/httpd/keystone-error_log
++    CustomLog /var/log/httpd/keystone-access_log combined
+ </VirtualHost>
+-- 
+2.1.0
+
