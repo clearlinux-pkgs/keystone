@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 2015.1.1
-Release  : 63
+Release  : 64
 URL      : http://tarballs.openstack.org/keystone/keystone-2015.1.1.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-2015.1.1.tar.gz
 Source1  : keystone.tmpfiles
@@ -190,7 +190,7 @@ python2 setup.py build -b py2
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
-python2 setup.py test || :
+python2 setup.py test
 %install
 rm -rf %{buildroot}
 python2 -tt setup.py build -b py2 install --root=%{buildroot}
