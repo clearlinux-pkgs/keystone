@@ -1,3970 +1,909 @@
-From 384a6f6f02fcc2b9dd0a24d845883c81c11de9cf Mon Sep 17 00:00:00 2001
-From: "Simental Magana, Marcos" <marcos.simental.magana@intel.com>
-Date: Wed, 23 Sep 2015 16:58:13 -0500
+From b7fc990bda452e37a8bdf69b55c46227529da7b9 Mon Sep 17 00:00:00 2001
+From: Victor Morales <victor.morales@intel.com>
+Date: Thu, 20 Aug 2015 17:27:35 -0500
 Subject: [PATCH] Logging patch
 
+Signed-off-by: Victor Morales <victor.morales@intel.com>
 ---
- keystone/common/authorization.py                   |   6 ++
- keystone/common/base64utils.py                     |  18 ++++
- keystone/common/cache/_memcache_pool.py            |  19 ++++
- keystone/common/cache/backends/memcache_pool.py    |   9 ++
- keystone/common/cache/backends/mongo.py            |  31 +++++++
- keystone/common/cache/backends/noop.py             |  12 +++
- keystone/common/cache/core.py                      |  20 ++++
- keystone/common/config.py                          |   9 ++
- keystone/common/controller.py                      |  26 ++++++
- keystone/common/dependency.py                      |  23 +++++
- keystone/common/driver_hints.py                    |   9 ++
- keystone/common/environment/eventlet_server.py     |  15 +++
- keystone/common/extension.py                       |   7 ++
- keystone/common/json_home.py                       |  10 ++
- keystone/common/kvs/backends/inmemdb.py            |  13 +++
- keystone/common/kvs/backends/memcached.py          |  14 +++
- keystone/common/kvs/core.py                        |  30 ++++++
- keystone/common/kvs/legacy.py                      |   8 ++
- keystone/common/ldap/core.py                       | 103 +++++++++++++++++++++
- keystone/common/manager.py                         |   8 ++
- keystone/common/models.py                          |   6 ++
- keystone/common/openssl.py                         |  16 ++++
- keystone/common/pemutils.py                        |  12 +++
- keystone/common/profiler.py                        |   6 ++
- keystone/common/router.py                          |   7 ++
- keystone/common/sql/core.py                        |  25 +++++
- keystone/common/sql/migrate_repo/manage.py         |   5 +
- .../sql/migrate_repo/versions/044_icehouse.py      |   7 ++
- .../sql/migrate_repo/versions/045_placeholder.py   |   5 +
- .../sql/migrate_repo/versions/046_placeholder.py   |   5 +
- .../sql/migrate_repo/versions/047_placeholder.py   |   5 +
- .../sql/migrate_repo/versions/048_placeholder.py   |   5 +
- .../sql/migrate_repo/versions/049_placeholder.py   |   5 +
- .../versions/050_fk_consistent_indexes.py          |   6 ++
- .../migrate_repo/versions/051_add_id_mapping.py    |   6 ++
- .../versions/052_add_auth_url_to_region.py         |   6 ++
- .../versions/053_endpoint_to_region_association.py |   7 ++
- .../versions/054_add_actor_id_index.py             |   6 ++
- .../versions/055_add_indexes_to_token_table.py     |   6 ++
- .../sql/migrate_repo/versions/056_placeholder.py   |   5 +
- .../sql/migrate_repo/versions/057_placeholder.py   |   5 +
- .../sql/migrate_repo/versions/058_placeholder.py   |   5 +
- .../sql/migrate_repo/versions/059_placeholder.py   |   5 +
- .../sql/migrate_repo/versions/060_placeholder.py   |   5 +
- .../versions/061_add_parent_project.py             |   7 ++
- .../versions/062_drop_assignment_role_fk.py        |   7 ++
- .../versions/063_drop_region_auth_url.py           |   6 ++
- .../versions/064_drop_user_and_group_fk.py         |   7 ++
- .../migrate_repo/versions/065_add_domain_config.py |   6 ++
- .../versions/066_fixup_service_name_value.py       |   6 ++
- .../versions/067_drop_redundant_mysql_index.py     |   6 ++
- keystone/common/sql/migration_helpers.py           |  18 ++++
- keystone/common/utils.py                           |  26 ++++++
- keystone/common/validation/parameter_types.py      |   5 +
- keystone/common/validation/validators.py           |   7 ++
- keystone/common/wsgi.py                            |  34 +++++++
- keystone/mytracer.py                               |  19 ++++
- 57 files changed, 715 insertions(+)
- mode change 100755 => 100644 keystone/common/pemutils.py
- create mode 100644 keystone/mytracer.py
+ keystone/common/controller.py | 106 ++++++++++++++++++++++++++++++++++++++++--
+ keystone/common/kvs/core.py   |  56 ++++++++++++++++++++++
+ keystone/common/profiler.py   |   2 +-
+ 3 files changed, 158 insertions(+), 6 deletions(-)
 
-diff --git a/keystone/common/authorization.py b/keystone/common/authorization.py
-index 5cb1e63..1c28a06 100644
---- a/keystone/common/authorization.py
-+++ b/keystone/common/authorization.py
-@@ -16,6 +16,11 @@
- #    License for the specific language governing permissions and limitations
- #    under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- from oslo_log import log
- 
- from keystone import exception
-@@ -42,6 +47,7 @@ It is a dictionary with the following attributes:
- LOG = log.getLogger(__name__)
- 
- 
-+@prepost(LOG)
- def token_to_auth_context(token):
-     if not isinstance(token, token_model.KeystoneToken):
-         raise exception.UnexpectedError(_('token reference must be a '
-diff --git a/keystone/common/base64utils.py b/keystone/common/base64utils.py
-index 1a636f9..9545d04 100644
---- a/keystone/common/base64utils.py
-+++ b/keystone/common/base64utils.py
-@@ -37,6 +37,11 @@ This module provides the following base64 utility functionality:
- 
- """
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import re
- import string
- 
-@@ -61,11 +66,13 @@ _base64_to_base64url_trans = string.maketrans('+/', '-_')
- _base64url_to_base64_trans = string.maketrans('-_', '+/')
- 
- 
-+@prepost(LOG)
- def _check_padding_length(pad):
-     if len(pad) != 1:
-         raise ValueError(_('pad must be single character'))
- 
- 
-+@prepost(LOG)
- def is_valid_base64(text):
-     """Test if input text can be base64 decoded.
- 
-@@ -85,6 +92,7 @@ def is_valid_base64(text):
-         return False
- 
- 
-+@prepost(LOG)
- def is_valid_base64url(text):
-     """Test if input text can be base64url decoded.
- 
-@@ -105,6 +113,7 @@ def is_valid_base64url(text):
-         return False
- 
- 
-+@prepost(LOG)
- def filter_formatting(text):
-     """Return base64 text without any formatting, just the base64.
- 
-@@ -122,6 +131,7 @@ def filter_formatting(text):
-     return _strip_formatting_re.sub('', text)
- 
- 
-+@prepost(LOG)
- def base64_to_base64url(text):
-     """Convert base64 text to base64url text.
- 
-@@ -171,6 +181,7 @@ def base64_to_base64url(text):
-     return text.translate(_base64_to_base64url_trans)
- 
- 
-+@prepost(LOG)
- def base64url_to_base64(text):
-     """Convert base64url text to base64 text.
- 
-@@ -189,6 +200,7 @@ def base64url_to_base64(text):
-     return text.translate(_base64url_to_base64_trans)
- 
- 
-+@prepost(LOG)
- def base64_is_padded(text, pad='='):
-     """Test if the text is base64 padded.
- 
-@@ -227,6 +239,7 @@ def base64_is_padded(text, pad='='):
-     return False
- 
- 
-+@prepost(LOG)
- def base64url_percent_encode(text):
-     """Percent-encode base64url padding.
- 
-@@ -247,6 +260,7 @@ def base64url_percent_encode(text):
-     return urllib.parse.quote(text)
- 
- 
-+@prepost(LOG)
- def base64url_percent_decode(text):
-     """Percent-decode base64url padding.
- 
-@@ -268,6 +282,7 @@ def base64url_percent_decode(text):
-     return decoded_text
- 
- 
-+@prepost(LOG)
- def base64_strip_padding(text, pad='='):
-     """Remove padding from input base64 text.
- 
-@@ -293,6 +308,7 @@ def base64_strip_padding(text, pad='='):
-         return text
- 
- 
-+@prepost(LOG)
- def base64_assure_padding(text, pad='='):
-     """Assure the input text ends with padding.
- 
-@@ -344,6 +360,7 @@ def base64_assure_padding(text, pad='='):
-     return text + padding
- 
- 
-+@prepost(LOG)
- def base64_wrap_iter(text, width=64):
-     """Fold text into lines of text with max line length.
- 
-@@ -366,6 +383,7 @@ def base64_wrap_iter(text, width=64):
-         yield text[x:x + width]
- 
- 
-+@prepost(LOG)
- def base64_wrap(text, width=64):
-     """Fold text into lines of text with max line length.
- 
-diff --git a/keystone/common/cache/_memcache_pool.py b/keystone/common/cache/_memcache_pool.py
-index bc55978..8623798 100644
---- a/keystone/common/cache/_memcache_pool.py
-+++ b/keystone/common/cache/_memcache_pool.py
-@@ -18,6 +18,11 @@
- # NOTE(yorik-sar): this file is copied between keystone and keystonemiddleware
- # and should be kept in sync until we can use external library for this.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import collections
- import contextlib
- import itertools
-@@ -48,6 +53,7 @@ class _MemcacheClient(memcache.Client):
-     __new__ = object.__new__
-     __setattr__ = object.__setattr__
- 
-+    @prepost(LOG)
-     def __del__(self):
-         pass
- 
-@@ -61,6 +67,7 @@ class ConnectionPool(queue.Queue):
-     This class implements the basic connection pool logic as an abstract base
-     class.
-     """
-+    @prepost(LOG)
-     def __init__(self, maxsize, unused_timeout, conn_get_timeout=None):
-         """Initialize the connection pool.
- 
-@@ -85,6 +92,7 @@ class ConnectionPool(queue.Queue):
-         self._connection_get_timeout = conn_get_timeout
-         self._acquired = 0
- 
-+    @prepost(LOG)
-     def _create_connection(self):
-         """Returns a connection instance.
- 
-@@ -95,6 +103,7 @@ class ConnectionPool(queue.Queue):
-         """
-         raise NotImplementedError
- 
-+    @prepost(LOG)
-     def _destroy_connection(self, conn):
-         """Destroy and cleanup a connection instance.
- 
-@@ -107,6 +116,7 @@ class ConnectionPool(queue.Queue):
-         """
-         raise NotImplementedError
- 
-+    @prepost(LOG)
-     def _debug_logger(self, msg, *args, **kwargs):
-         if LOG.isEnabledFor(logging.DEBUG):
-             thread_id = threading.current_thread().ident
-@@ -138,6 +148,7 @@ class ConnectionPool(queue.Queue):
-                 self._debug_logger('Reaping exceeding connection %s', id(conn))
-                 self._destroy_connection(conn)
- 
-+    @prepost(LOG)
-     def _qsize(self):
-         if self.maxsize:
-             return self.maxsize - self._acquired
-@@ -152,6 +163,7 @@ class ConnectionPool(queue.Queue):
-     if not hasattr(queue.Queue, '_qsize'):
-         qsize = _qsize
- 
-+    @prepost(LOG)
-     def _get(self):
-         if self.queue:
-             conn = self.queue.pop().connection
-@@ -160,6 +172,7 @@ class ConnectionPool(queue.Queue):
-         self._acquired += 1
-         return conn
- 
-+    @prepost(LOG)
-     def _drop_expired_connections(self):
-         """Drop all expired connections from the right end of the queue."""
-         now = time.time()
-@@ -168,6 +181,7 @@ class ConnectionPool(queue.Queue):
-             self._debug_logger('Reaping connection %s', id(conn))
-             self._destroy_connection(conn)
- 
-+    @prepost(LOG)
-     def _put(self, conn):
-         self.queue.append(_PoolItem(
-             ttl=time.time() + self._unused_timeout,
-@@ -177,6 +191,7 @@ class ConnectionPool(queue.Queue):
- 
- 
- class MemcacheClientPool(ConnectionPool):
-+    @prepost(LOG)
-     def __init__(self, urls, arguments, **kwargs):
-         # super() cannot be used here because Queue in stdlib is an
-         # old-style class
-@@ -188,12 +203,15 @@ class MemcacheClientPool(ConnectionPool):
-         # the host is not dead.
-         self._hosts_deaduntil = [0] * len(urls)
- 
-+    @prepost(LOG)
-     def _create_connection(self):
-         return _MemcacheClient(self.urls, **self._arguments)
- 
-+    @prepost(LOG)
-     def _destroy_connection(self, conn):
-         conn.disconnect_all()
- 
-+    @prepost(LOG)
-     def _get(self):
-         # super() cannot be used here because Queue in stdlib is an
-         # old-style class
-@@ -215,6 +233,7 @@ class MemcacheClientPool(ConnectionPool):
-             raise
-         return conn
- 
-+    @prepost(LOG)
-     def _put(self, conn):
-         try:
-             # If this client found that one of the hosts is dead, mark it as
-diff --git a/keystone/common/cache/backends/memcache_pool.py b/keystone/common/cache/backends/memcache_pool.py
-index f3990b1..47ad3bf 100644
---- a/keystone/common/cache/backends/memcache_pool.py
-+++ b/keystone/common/cache/backends/memcache_pool.py
-@@ -15,6 +15,11 @@
- 
- """dogpile.cache backend that uses Memcached connection pool"""
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import functools
- import logging
- 
-@@ -28,19 +33,23 @@ LOG = logging.getLogger(__name__)
- 
- # Helper to ease backend refactoring
- class ClientProxy(object):
-+    @prepost(LOG)
-     def __init__(self, client_pool):
-         self.client_pool = client_pool
- 
-+    @prepost(LOG)
-     def _run_method(self, __name, *args, **kwargs):
-         with self.client_pool.acquire() as client:
-             return getattr(client, __name)(*args, **kwargs)
- 
-+    @prepost(LOG)
-     def __getattr__(self, name):
-         return functools.partial(self._run_method, name)
- 
- 
- class PooledMemcachedBackend(memcached_backend.MemcachedBackend):
-     # Composed from GenericMemcachedBackend's and MemcacheArgs's __init__
-+    @prepost(LOG)
-     def __init__(self, arguments):
-         super(PooledMemcachedBackend, self).__init__(arguments)
-         self.client_pool = _memcache_pool.MemcacheClientPool(
-diff --git a/keystone/common/cache/backends/mongo.py b/keystone/common/cache/backends/mongo.py
-index 58856ac..6aad211 100644
---- a/keystone/common/cache/backends/mongo.py
-+++ b/keystone/common/cache/backends/mongo.py
-@@ -12,6 +12,11 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import abc
- import datetime
- 
-@@ -152,6 +157,7 @@ class MongoCacheBackend(api.CacheBackend):
- 
-     """
- 
-+    @prepost(LOG)
-     def __init__(self, arguments):
-         self.api = MongoApi(arguments)
- 
-@@ -168,6 +174,7 @@ class MongoCacheBackend(api.CacheBackend):
-         self.api.get_cache_collection()
-         return self.api
- 
-+    @prepost(LOG)
-     def get(self, key):
-         value = self.client.get(key)
-         if value is None:
-@@ -175,6 +182,7 @@ class MongoCacheBackend(api.CacheBackend):
-         else:
-             return value
- 
-+    @prepost(LOG)
-     def get_multi(self, keys):
-         values = self.client.get_multi(keys)
-         return [
-@@ -182,15 +190,19 @@ class MongoCacheBackend(api.CacheBackend):
-             else values[key] for key in keys
-         ]
- 
-+    @prepost(LOG)
-     def set(self, key, value):
-         self.client.set(key, value)
- 
-+    @prepost(LOG)
-     def set_multi(self, mapping):
-         self.client.set_multi(mapping)
- 
-+    @prepost(LOG)
-     def delete(self, key):
-         self.client.delete(key)
- 
-+    @prepost(LOG)
-     def delete_multi(self, keys):
-         self.client.delete_multi(keys)
- 
-@@ -213,10 +225,12 @@ class MongoApi(object):
-     _DB = {}  # dict of db_name: db connection reference
-     _MONGO_COLLS = {}  # dict of cache_collection : db collection reference
- 
-+    @prepost(LOG)
-     def __init__(self, arguments):
-         self._init_args(arguments)
-         self._data_manipulator = None
- 
-+    @prepost(LOG)
-     def _init_args(self, arguments):
-         """Helper logic for collecting and parsing MongoDB specific arguments.
- 
-@@ -294,6 +308,7 @@ class MongoApi(object):
-         # rest of arguments are passed to mongo crud calls
-         self.meth_kwargs = arguments
- 
-+    @prepost(LOG)
-     def _ssl_cert_req_type(self, req_type):
-         try:
-             import ssl
-@@ -311,6 +326,7 @@ class MongoApi(object):
-                     '"NONE", "OPTIONAL", "REQUIRED"') % (req_type)
-             raise exception.ValidationError(message=msg)
- 
-+    @prepost(LOG)
-     def _get_db(self):
-         # defer imports until backend is used
-         global pymongo
-@@ -332,6 +348,7 @@ class MongoApi(object):
-             database.authenticate(self.username, self.password)
-         return database
- 
-+    @prepost(LOG)
-     def _assign_data_mainpulator(self):
-         if self._data_manipulator is None:
-             if self.son_manipulator:
-@@ -340,6 +357,7 @@ class MongoApi(object):
-             else:
-                 self._data_manipulator = BaseTransform()
- 
-+    @prepost(LOG)
-     def _get_doc_date(self):
-         if self.ttl_seconds > 0:
-             expire_delta = datetime.timedelta(seconds=self.ttl_seconds)
-@@ -348,6 +366,7 @@ class MongoApi(object):
-             doc_date = timeutils.utcnow()
-         return doc_date
- 
-+    @prepost(LOG)
-     def get_cache_collection(self):
-         if self.cache_collection not in self._MONGO_COLLS:
-             global pymongo
-@@ -379,6 +398,7 @@ class MongoApi(object):
- 
-         return self._MONGO_COLLS[self.cache_collection]
- 
-+    @prepost(LOG)
-     def _get_cache_entry(self, key, value, meta, doc_date):
-         """MongoDB cache data representation.
- 
-@@ -389,6 +409,7 @@ class MongoApi(object):
-         """
-         return dict(_id=key, value=value, meta=meta, doc_date=doc_date)
- 
-+    @prepost(LOG)
-     def _validate_ttl_index(self, collection, coll_name, ttl_seconds):
-         """Checks if existing TTL index is removed on a collection.
- 
-@@ -411,6 +432,7 @@ class MongoApi(object):
-                     LOG.warn(msg, {'c_name': coll_name,
-                                    'indx_name': indx_name})
- 
-+    @prepost(LOG)
-     def get(self, key):
-         critieria = {'_id': key}
-         result = self.get_cache_collection().find_one(spec_or_id=critieria,
-@@ -420,16 +442,19 @@ class MongoApi(object):
-         else:
-             return None
- 
-+    @prepost(LOG)
-     def get_multi(self, keys):
-         db_results = self._get_results_as_dict(keys)
-         return {doc['_id']: doc['value'] for doc in six.itervalues(db_results)}
- 
-+    @prepost(LOG)
-     def _get_results_as_dict(self, keys):
-         critieria = {'_id': {'$in': keys}}
-         db_results = self.get_cache_collection().find(spec=critieria,
-                                                       **self.meth_kwargs)
-         return {doc['_id']: doc for doc in db_results}
- 
-+    @prepost(LOG)
-     def set(self, key, value):
-         doc_date = self._get_doc_date()
-         ref = self._get_cache_entry(key, value.payload, value.metadata,
-@@ -441,6 +466,7 @@ class MongoApi(object):
-         self.get_cache_collection().find_and_modify(spec, ref, upsert=True,
-                                                     **self.meth_kwargs)
- 
-+    @prepost(LOG)
-     def set_multi(self, mapping):
-         """Insert multiple documents specified as key, value pairs.
- 
-@@ -467,11 +493,13 @@ class MongoApi(object):
-             self.get_cache_collection().save(upd_doc, manipulate=True,
-                                              **self.meth_kwargs)
- 
-+    @prepost(LOG)
-     def delete(self, key):
-         critieria = {'_id': key}
-         self.get_cache_collection().remove(spec_or_id=critieria,
-                                            **self.meth_kwargs)
- 
-+    @prepost(LOG)
-     def delete_multi(self, keys):
-         critieria = {'_id': {'$in': keys}}
-         self.get_cache_collection().remove(spec_or_id=critieria,
-@@ -511,6 +539,7 @@ class AbstractManipulator(object):
-         """
-         raise exception.NotImplemented()  # pragma: no cover
- 
-+    @prepost(LOG)
-     def will_copy(self):
-         """Will this SON manipulator make a copy of the incoming document?
- 
-@@ -534,6 +563,7 @@ class BaseTransform(AbstractManipulator):
-     checks that overridden method in instance and its super are different.
-     """
- 
-+    @prepost(LOG)
-     def transform_incoming(self, son, collection):
-         """Used while saving data to MongoDB."""
-         for (key, value) in son.items():
-@@ -544,6 +574,7 @@ class BaseTransform(AbstractManipulator):
-                 son[key] = self.transform_incoming(value, collection)
-         return son
- 
-+    @prepost(LOG)
-     def transform_outgoing(self, son, collection):
-         """Used while reading data from MongoDB."""
-         metadata = None
-diff --git a/keystone/common/cache/backends/noop.py b/keystone/common/cache/backends/noop.py
-index 38329c9..f2737a3 100644
---- a/keystone/common/cache/backends/noop.py
-+++ b/keystone/common/cache/backends/noop.py
-@@ -12,6 +12,11 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- from dogpile.cache import api
- 
- 
-@@ -27,23 +32,30 @@ class NoopCacheBackend(api.CacheBackend):
-     mechanism to cleanup it's internal dict and therefore could cause run-away
-     memory utilization.
-     """
-+    @prepost(LOG)
-     def __init__(self, *args):
-         return
- 
-+    @prepost(LOG)
-     def get(self, key):
-         return NO_VALUE
- 
-+    @prepost(LOG)
-     def get_multi(self, keys):
-         return [NO_VALUE for x in keys]
- 
-+    @prepost(LOG)
-     def set(self, key, value):
-         return
- 
-+    @prepost(LOG)
-     def set_multi(self, mapping):
-         return
- 
-+    @prepost(LOG)
-     def delete(self, key):
-         return
- 
-+    @prepost(LOG)
-     def delete_multi(self, keys):
-         return
-diff --git a/keystone/common/cache/core.py b/keystone/common/cache/core.py
-index 306587b..d97804e 100644
---- a/keystone/common/cache/core.py
-+++ b/keystone/common/cache/core.py
-@@ -14,6 +14,11 @@
- 
- """Keystone Caching Layer Implementation."""
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import dogpile.cache
- from dogpile.cache import proxy
- from dogpile.cache import util
-@@ -54,36 +59,43 @@ class DebugProxy(proxy.ProxyBackend):
-     # purposes encode/decode is irrelevant and we should be looking at the
-     # data exactly as it stands.
- 
-+    @prepost(LOG)
-     def get(self, key):
-         value = self.proxied.get(key)
-         LOG.debug('CACHE_GET: Key: "%(key)r" Value: "%(value)r"',
-                   {'key': key, 'value': value})
-         return value
- 
-+    @prepost(LOG)
-     def get_multi(self, keys):
-         values = self.proxied.get_multi(keys)
-         LOG.debug('CACHE_GET_MULTI: "%(keys)r" Values: "%(values)r"',
-                   {'keys': keys, 'values': values})
-         return values
- 
-+    @prepost(LOG)
-     def set(self, key, value):
-         LOG.debug('CACHE_SET: Key: "%(key)r" Value: "%(value)r"',
-                   {'key': key, 'value': value})
-         return self.proxied.set(key, value)
- 
-+    @prepost(LOG)
-     def set_multi(self, keys):
-         LOG.debug('CACHE_SET_MULTI: "%r"', keys)
-         self.proxied.set_multi(keys)
- 
-+    @prepost(LOG)
-     def delete(self, key):
-         self.proxied.delete(key)
-         LOG.debug('CACHE_DELETE: "%r"', key)
- 
-+    @prepost(LOG)
-     def delete_multi(self, keys):
-         LOG.debug('CACHE_DELETE_MULTI: "%r"', keys)
-         self.proxied.delete_multi(keys)
- 
- 
-+@prepost(LOG)
- def build_cache_config():
-     """Build the cache region dictionary configuration.
- 
-@@ -119,6 +131,7 @@ def build_cache_config():
-     return conf_dict
- 
- 
-+@prepost(LOG)
- def configure_cache_region(region):
-     """Configure a cache region.
- 
-@@ -165,6 +178,7 @@ def configure_cache_region(region):
-     return region
- 
- 
-+@prepost(LOG)
- def get_should_cache_fn(section):
-     """Build a function that returns a config section's caching status.
- 
-@@ -188,6 +202,7 @@ def get_should_cache_fn(section):
-     :type section: string
-     :returns: function reference
-     """
-+    @prepost(LOG)
-     def should_cache(value):
-         if not CONF.cache.enabled:
-             return False
-@@ -196,6 +211,7 @@ def get_should_cache_fn(section):
-     return should_cache
- 
- 
-+@prepost(LOG)
- def get_expiration_time_fn(section):
-     """Build a function that returns a config section's expiration time status.
- 
-@@ -228,12 +244,14 @@ def get_expiration_time_fn(section):
-     :type section: string
-     :rtype: function reference
-     """
-+    @prepost(LOG)
-     def get_expiration_time():
-         conf_group = getattr(CONF, section)
-         return getattr(conf_group, 'cache_time', None)
-     return get_expiration_time
- 
- 
-+@prepost(LOG)
- def key_generate_to_str(s):
-     # NOTE(morganfainberg): Since we need to stringify all arguments, attempt
-     # to stringify and handle the Unicode error explicitly as needed.
-@@ -243,6 +261,7 @@ def key_generate_to_str(s):
-         return s.encode('utf-8')
- 
- 
-+@prepost(LOG)
- def function_key_generator(namespace, fn, to_str=key_generate_to_str):
-     # NOTE(morganfainberg): This wraps dogpile.cache's default
-     # function_key_generator to change the default to_str mechanism.
-@@ -254,6 +273,7 @@ REGION = dogpile.cache.make_region(
- on_arguments = REGION.cache_on_arguments
- 
- 
-+@prepost(LOG)
- def get_memoization_decorator(section, expiration_section=None):
-     """Build a function based on the `on_arguments` decorator for the section.
- 
-diff --git a/keystone/common/config.py b/keystone/common/config.py
-index aef4bce..f12d6be 100644
---- a/keystone/common/config.py
-+++ b/keystone/common/config.py
-@@ -12,6 +12,11 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- from oslo_config import cfg
- import oslo_messaging
- 
-@@ -1093,10 +1098,12 @@ CONF = cfg.CONF
- oslo_messaging.set_transport_defaults(control_exchange='keystone')
- 
- 
-+@prepost(LOG)
- def _register_auth_plugin_opt(conf, option):
-     conf.register_opt(option, group='auth')
- 
- 
-+@prepost(LOG)
- def setup_authentication(conf=None):
-     # register any non-default auth methods here (used by extensions, etc)
-     if conf is None:
-@@ -1107,6 +1114,7 @@ def setup_authentication(conf=None):
-             _register_auth_plugin_opt(conf, option)
- 
- 
-+@prepost(LOG)
- def configure(conf=None):
-     if conf is None:
-         conf = CONF
-@@ -1132,6 +1140,7 @@ def configure(conf=None):
-     setup_authentication(conf)
- 
- 
-+@prepost(LOG)
- def list_opts():
-     """Return a list of oslo_config options available in Keystone.
- 
 diff --git a/keystone/common/controller.py b/keystone/common/controller.py
-index 5667eff..7fcd527 100644
+index 5667eff..35d7406 100644
 --- a/keystone/common/controller.py
 +++ b/keystone/common/controller.py
-@@ -12,6 +12,11 @@
- #    License for the specific language governing permissions and limitations
- #    under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import functools
- import uuid
- 
-@@ -34,6 +39,7 @@ LOG = log.getLogger(__name__)
- CONF = cfg.CONF
+@@ -35,6 +35,7 @@ CONF = cfg.CONF
  
  
-+@prepost(LOG)
  def v2_deprecated(f):
++    LOG.debug("0Speedy Gonzalez")
      """No-op decorator in preparation for deprecating Identity API v2.
  
-@@ -52,6 +58,7 @@ def v2_deprecated(f):
+     This is a placeholder for the pending deprecation of v2. The implementation
+@@ -49,10 +50,12 @@ def v2_deprecated(f):
+             in_favor_of='v3 API')
+ 
+     """
++    LOG.debug("1SpeedyGonzalez")
      return f
  
  
-+@prepost(LOG)
  def _build_policy_check_credentials(self, action, context, kwargs):
++    LOG.debug("0Speedy Gonzalez")
      kwargs_str = ', '.join(['%s=%s' % (k, kwargs[k]) for k in kwargs])
      kwargs_str = strutils.mask_password(kwargs_str)
-@@ -88,6 +95,7 @@ def _build_policy_check_credentials(self, action, context, kwargs):
+ 
+@@ -64,6 +67,7 @@ def _build_policy_check_credentials(self, action, context, kwargs):
+     if ('environment' in context and
+             authorization.AUTH_CONTEXT_ENV in context['environment']):
+         LOG.debug('RBAC: using auth context from the request environment')
++        LOG.debug("1Speedy Gonzalez")
+         return context['environment'].get(authorization.AUTH_CONTEXT_ENV)
+ 
+     # There is no current auth context, build it from the incoming token.
+@@ -79,16 +83,19 @@ def _build_policy_check_credentials(self, action, context, kwargs):
+         # function it would otherwise need to reload the token_ref from
+         # backing store.
+         wsgi.validate_token_bind(context, token_ref)
++        LOG.debug("1Speedy Gonzalez")
+     except exception.TokenNotFound:
+         LOG.warning(_LW('RBAC: Invalid token'))
++        LOG.debug("1Speedy Gonzalez")
+         raise exception.Unauthorized()
+ 
+     auth_context = authorization.token_to_auth_context(token_ref)
+-
++    LOG.debug("1Speedy Gonzalez")
      return auth_context
  
  
-+@prepost(LOG)
  def protected(callback=None):
++    LOG.debug("0Speedy Gonzalez")
      """Wraps API calls with role based access controls (RBAC).
  
-@@ -101,6 +109,7 @@ def protected(callback=None):
-     check_protection() in the V3Controller class.
- 
-     """
-+    @prepost(LOG)
+     This handles both the protection of the API parameters as well as any
+@@ -104,6 +111,7 @@ def protected(callback=None):
      def wrapper(f):
          @functools.wraps(f)
          def inner(self, context, *args, **kwargs):
-@@ -164,9 +173,11 @@ def protected(callback=None):
++            LOG.debug("0Speedy Gonzalez")
+             if 'is_admin' in context and context['is_admin']:
+                 LOG.warning(_LW('RBAC: Bypassing authorization'))
+             elif callback is not None:
+@@ -159,6 +167,7 @@ def protected(callback=None):
+                                         action,
+                                         utils.flatten_dict(policy_dict))
+                 LOG.debug('RBAC: Authorization granted')
++            LOG.debug("1Speedy Gonzalez")
+             return f(self, context, *args, **kwargs)
+         return inner
      return wrapper
- 
- 
-+@prepost(LOG)
- def filterprotected(*filters):
-     """Wraps filtered API calls with role based access controls (RBAC)."""
- 
-+    @prepost(LOG)
+@@ -170,6 +179,7 @@ def filterprotected(*filters):
      def _filterprotected(f):
          @functools.wraps(f)
          def wrapper(self, context, **kwargs):
-@@ -210,6 +221,7 @@ def filterprotected(*filters):
- 
++            LOG.debug("0Speedy Gonzalez")
+             if not context['is_admin']:
+                 action = 'identity:%s' % f.__name__
+                 creds = _build_policy_check_credentials(self, action,
+@@ -203,6 +213,7 @@ def filterprotected(*filters):
+                 LOG.debug('RBAC: Authorization granted')
+             else:
+                 LOG.warning(_LW('RBAC: Bypassing authorization'))
++            LOG.debug("1Speedy Gonzalez")
+             return f(self, context, filters, **kwargs)
+         return wrapper
+     return _filterprotected
+@@ -211,6 +222,7 @@ def filterprotected(*filters):
  class V2Controller(wsgi.Application):
      """Base controller class for Identity API v2."""
-+    @prepost(LOG)
      def _normalize_domain_id(self, context, ref):
++        LOG.debug("0Speedy Gonzalez")
          """Fill in domain_id since v2 calls are not domain-aware.
  
-@@ -287,6 +299,7 @@ class V2Controller(wsgi.Application):
-         conversion.
+         This will overwrite any domain_id that was inadvertently
+@@ -218,16 +230,20 @@ class V2Controller(wsgi.Application):
+ 
+         """
+         ref['domain_id'] = CONF.identity.default_domain_id
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def filter_domain_id(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Remove domain_id since v2 calls are not domain-aware."""
+         ref.pop('domain_id', None)
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def filter_domain(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Remove domain since v2 calls are not domain-aware.
+ 
+         V3 Fernet tokens builds the users with a domain in the token data.
+@@ -237,19 +253,24 @@ class V2Controller(wsgi.Application):
+         """
+         if 'domain' in ref:
+             if ref['domain'].get('id') != CONF.identity.default_domain_id:
++                LOG.debug("1Speedy Gonzalez")
+                 raise exception.Unauthorized(
+                     _('Non-default domain is not supported'))
+             del ref['domain']
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def filter_project_parent_id(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Remove parent_id since v2 calls are not hierarchy-aware."""
+         ref.pop('parent_id', None)
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def normalize_username_in_response(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Adds username to outgoing user refs to match the v2 spec.
+ 
+         Internally we use `name` to represent a user's name. The v2 spec
+@@ -258,10 +279,12 @@ class V2Controller(wsgi.Application):
+         """
+         if 'username' not in ref and 'name' in ref:
+             ref['username'] = ref['name']
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def normalize_username_in_request(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Adds name in incoming user refs to match the v2 spec.
+ 
+         Internally we use `name` to represent a user's name. The v2 spec
+@@ -270,10 +293,12 @@ class V2Controller(wsgi.Application):
+         """
+         if 'name' not in ref and 'username' in ref:
+             ref['name'] = ref.pop('username')
++        LOG.debug("1Speedy Gonzalez")
+         return ref
+ 
+     @staticmethod
+     def v3_to_v2_user(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Convert a user_ref from v3 to v2 compatible.
+ 
+         * v2.0 users are not domain aware, and should have domain_id removed
+@@ -288,6 +313,7 @@ class V2Controller(wsgi.Application):
          """
  
-+        @prepost(LOG)
          def _format_default_project_id(ref):
++            LOG.debug("0Speedy Gonzalez")
              """Convert default_project_id to tenantId for v2 calls."""
              default_project_id = ref.pop('default_project_id', None)
-@@ -299,6 +312,7 @@ class V2Controller(wsgi.Application):
+             if default_project_id is not None:
+@@ -298,24 +324,31 @@ class V2Controller(wsgi.Application):
+                 # user, we remove it here.  If default_project_id is set, we
                  # would override it in either case.
                  del ref['tenantId']
++            LOG.debug("1Speedy Gonzalez")
  
-+        @prepost(LOG)
          def _normalize_and_filter_user_properties(ref):
++            LOG.debug("0Speedy Gonzalez")
              """Run through the various filter/normalization methods."""
              _format_default_project_id(ref)
-@@ -329,6 +343,7 @@ class V2Controller(wsgi.Application):
-         conversion.
-         """
- 
-+        @prepost(LOG)
-         def _filter_project_properties(ref):
-             """Run through the various filter methods."""
+             V2Controller.filter_domain(ref)
              V2Controller.filter_domain_id(ref)
-@@ -342,6 +357,7 @@ class V2Controller(wsgi.Application):
+             V2Controller.normalize_username_in_response(ref)
++            LOG.debug("1Speedy Gonzalez")
+             return ref
+ 
+         if isinstance(ref, dict):
++            LOG.debug("1Speedy Gonzalez")
+             return _normalize_and_filter_user_properties(ref)
+         elif isinstance(ref, list):
++            LOG.debug("1Speedy Gonzalez")
+             return [_normalize_and_filter_user_properties(x) for x in ref]
          else:
++            LOG.debug("1Speedy Gonzalez")
              raise ValueError(_('Expected dict or list: %s') % type(ref))
  
-+    @prepost(LOG)
+     @staticmethod
+     def v3_to_v2_project(ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Convert a project_ref from v3 to v2.
+ 
+         * v2.0 projects are not domain aware, and should have domain_id removed
+@@ -330,19 +363,25 @@ class V2Controller(wsgi.Application):
+         """
+ 
+         def _filter_project_properties(ref):
++            LOG.debug("0Speedy Gonzalez")
+             """Run through the various filter methods."""
+             V2Controller.filter_domain_id(ref)
+             V2Controller.filter_project_parent_id(ref)
++            LOG.debug("1Speedy Gonzalez")
+             return ref
+ 
+         if isinstance(ref, dict):
++            LOG.debug("1Speedy Gonzalez")
+             return _filter_project_properties(ref)
+         elif isinstance(ref, list):
++            LOG.debug("1Speedy Gonzalez")
+             return [_filter_project_properties(x) for x in ref]
+         else:
++            LOG.debug("1Speedy Gonzalez")
+             raise ValueError(_('Expected dict or list: %s') % type(ref))
+ 
      def format_project_list(self, tenant_refs, **kwargs):
++        LOG.debug("0Speedy Gonzalez")
          """Format a v2 style project list, including marker/limits."""
          marker = kwargs.get('marker')
-@@ -408,6 +424,7 @@ class V3Controller(wsgi.Application):
+         first_index = 0
+@@ -354,6 +393,7 @@ class V2Controller(wsgi.Application):
+                     break
+             else:
+                 msg = _('Marker could not be found')
++                LOG.debug("1Speedy Gonzalez")
+                 raise exception.ValidationError(message=msg)
  
-         return '%s/%s/%s' % (endpoint, 'v3', path.lstrip('/'))
+         limit = kwargs.get('limit')
+@@ -365,6 +405,7 @@ class V2Controller(wsgi.Application):
+                     raise AssertionError()
+             except (ValueError, AssertionError):
+                 msg = _('Invalid limit value')
++                LOG.debug("1Speedy Gonzalez")
+                 raise exception.ValidationError(message=msg)
+             last_index = first_index + limit
  
-+    @prepost(LOG)
-     def get_auth_context(self, context):
+@@ -375,6 +416,7 @@ class V2Controller(wsgi.Application):
+                 x['enabled'] = True
+         o = {'tenants': tenant_refs,
+              'tenants_links': []}
++        LOG.debug("1Speedy Gonzalez")
+         return o
+ 
+ 
+@@ -402,6 +444,7 @@ class V3Controller(wsgi.Application):
+ 
+     @classmethod
+     def base_url(cls, context, path=None):
++        LOG.debug("0Speedy Gonzalez")
+         endpoint = super(V3Controller, cls).base_url(context, 'public')
+         if not path:
+             path = cls.collection_name
+@@ -412,18 +455,21 @@ class V3Controller(wsgi.Application):
          # TODO(dolphm): this method of accessing the auth context is terrible,
          # but context needs to be refactored to always have reasonable values.
-@@ -531,6 +548,7 @@ class V3Controller(wsgi.Application):
+         env_context = context.get('environment', {})
++        LOG.debug("1Speedy Gonzalez")
+         return env_context.get(authorization.AUTH_CONTEXT_ENV, {})
+ 
+     @classmethod
+     def full_url(cls, context, path=None):
++        LOG.debug("0Speedy Gonzalez")
+         url = cls.base_url(context, path)
+         if context['environment'].get('QUERY_STRING'):
+             url = '%s?%s' % (url, context['environment']['QUERY_STRING'])
+-
++        LOG.debug("1Speedy Gonzalez")
+         return url
+ 
+     @classmethod
+     def query_filter_is_true(cls, filter_value):
++        LOG.debug("0Speedy Gonzalez")
+         """Determine if bool query param is 'True'.
+ 
+         We treat this the same way as we do for policy
+@@ -441,20 +487,26 @@ class V3Controller(wsgi.Application):
+             val = False
+         else:
+             val = True
++        LOG.debug("1Speedy Gonzalez")
+         return val
+ 
+     @classmethod
+     def _add_self_referential_link(cls, context, ref):
++        LOG.debug("0Speedy Gonzalez")
+         ref.setdefault('links', {})
+         ref['links']['self'] = cls.base_url(context) + '/' + ref['id']
++        LOG.debug("1Speedy Gonzalez")
+ 
+     @classmethod
+     def wrap_member(cls, context, ref):
++        LOG.debug("0Speedy Gonzalez")
+         cls._add_self_referential_link(context, ref)
++        LOG.debug("1Speedy Gonzalez")
+         return {cls.member_name: ref}
+ 
+     @classmethod
+     def wrap_collection(cls, context, refs, hints=None):
++        LOG.debug("0Speedy Gonzalez")
+         """Wrap a collection, checking for filtering and pagination.
+ 
+         Returns the wrapped collection, which includes:
+@@ -491,11 +543,12 @@ class V3Controller(wsgi.Application):
+ 
+         if list_limited:
+             container['truncated'] = True
+-
++        LOG.debug("1Speedy Gonzalez")
+         return container
+ 
+     @classmethod
+     def limit(cls, refs, hints):
++        LOG.debug("0Speedy Gonzalez")
+         """Limits a list of entities.
+ 
+         The underlying driver layer may have already truncated the collection
+@@ -514,24 +567,30 @@ class V3Controller(wsgi.Application):
+ 
+         if hints is None or hints.limit is None:
+             # No truncation was requested
++            LOG.debug("1Speedy Gonzalez")
+             return NOT_LIMITED, refs
+ 
+         if hints.limit.get('truncated', False):
+             # The driver did truncate the list
++            LOG.debug("1Speedy Gonzalez")
+             return LIMITED, refs
+ 
+         if len(refs) > hints.limit['limit']:
+             # The driver layer wasn't able to truncate it for us, so we must
+             # do it here
++            LOG.debug("1Speedy Gonzalez")
+             return LIMITED, refs[:hints.limit['limit']]
+ 
++        LOG.debug("1Speedy Gonzalez")
+         return NOT_LIMITED, refs
+ 
+     @classmethod
      def filter_by_attributes(cls, refs, hints):
++        LOG.debug("0Speedy Gonzalez")
          """Filters a list of references by filter values."""
  
-+        @prepost(LOG)
          def _attr_match(ref_attr, val_attr):
++            LOG.debug("0Speedy Gonzalez")
              """Matches attributes allowing for booleans as strings.
  
-@@ -544,6 +562,7 @@ class V3Controller(wsgi.Application):
+             We test explicitly for a value that defines it as 'False',
+@@ -540,11 +599,14 @@ class V3Controller(wsgi.Application):
+ 
+             """
+             if type(ref_attr) is bool:
++                LOG.debug("1Speedy Gonzalez")
+                 return ref_attr == utils.attr_as_boolean(val_attr)
              else:
++                LOG.debug("1Speedy Gonzalez")
                  return ref_attr == val_attr
  
-+        @prepost(LOG)
          def _inexact_attr_match(filter, ref):
++            LOG.debug("0Speedy Gonzalez")
              """Applies an inexact filter to a result dict.
  
-@@ -647,11 +666,13 @@ class V3Controller(wsgi.Application):
+             :param filter: the filter in question
+@@ -566,15 +628,19 @@ class V3Controller(wsgi.Application):
+                     target_value = target_value.lower()
+ 
+                 if comparator == 'contains':
++                    LOG.debug("1Speedy Gonzalez")
+                     return (filter_value in target_value)
+                 elif comparator == 'startswith':
++                    LOG.debug("1Speedy Gonzalez")
+                     return target_value.startswith(filter_value)
+                 elif comparator == 'endswith':
++                    LOG.debug("1Speedy Gonzalez")
+                     return target_value.endswith(filter_value)
+                 else:
+                     # We silently ignore unsupported filters
++                    LOG.debug("1Speedy Gonzalez")
+                     return True
+-
++            LOG.debug("1Speedy Gonzalez")
+             return False
+ 
+         for filter in hints.filters:
+@@ -587,11 +653,12 @@ class V3Controller(wsgi.Application):
+                 # It might be an inexact filter
+                 refs = [r for r in refs if _inexact_attr_match(
+                     filter, r)]
+-
++        LOG.debug("1Speedy Gonzalez")
+         return refs
+ 
+     @classmethod
+     def build_driver_hints(cls, context, supported_filters):
++        LOG.debug("0Speedy Gonzalez")
+         """Build list hints based on the context query string.
+ 
+         :param context: contains the query_string from which any list hints can
+@@ -604,6 +671,7 @@ class V3Controller(wsgi.Application):
+         hints = driver_hints.Hints()
+ 
+         if query_dict is None:
++            LOG.debug("1Speedy Gonzalez")
+             return hints
+ 
+         for key in query_dict:
+@@ -645,14 +713,18 @@ class V3Controller(wsgi.Application):
+         # NOTE(henry-nash): If we were to support pagination, we would pull any
+         # pagination directives out of the query_dict here, and add them into
          # the hints list.
++        LOG.debug("1Speedy Gonzalez")
          return hints
  
-+    @prepost(LOG)
      def _require_matching_id(self, value, ref):
++        LOG.debug("0Speedy Gonzalez")
          """Ensures the value matches the reference's ID, if any."""
          if 'id' in ref and ref['id'] != value:
++            LOG.debug("1Speedy Gonzalez")
              raise exception.ValidationError('Cannot change ID')
  
-+    @prepost(LOG)
      def _require_matching_domain_id(self, ref_id, ref, get_member):
++        LOG.debug("0Speedy Gonzalez")
          """Ensure the current domain ID matches the reference one, if any.
  
-@@ -674,12 +695,14 @@ class V3Controller(wsgi.Application):
+         Provided we want domain IDs to be immutable, check whether any
+@@ -672,15 +744,19 @@ class V3Controller(wsgi.Application):
+         if CONF.domain_id_immutable and 'domain_id' in ref:
+             existing_ref = get_member(ref_id)
              if ref['domain_id'] != existing_ref['domain_id']:
++                LOG.debug("1Speedy Gonzalez")
                  raise exception.ValidationError(_('Cannot change Domain ID'))
  
-+    @prepost(LOG)
      def _assign_unique_id(self, ref):
++        LOG.debug("0Speedy Gonzalez")
          """Generates and assigns a unique identifier to a reference."""
          ref = ref.copy()
          ref['id'] = uuid.uuid4().hex
++        LOG.debug("1Speedy Gonzalez")
          return ref
  
-+    @prepost(LOG)
      def _get_domain_id_for_list_request(self, context):
++        LOG.debug("0Speedy Gonzalez")
          """Get the domain_id for a v3 list call.
  
-@@ -715,6 +738,7 @@ class V3Controller(wsgi.Application):
-                 _LW('No domain information specified as part of list request'))
+         If we running with multiple domain drivers, then the caller must
+@@ -689,9 +765,11 @@ class V3Controller(wsgi.Application):
+         """
+         if not CONF.identity.domain_specific_drivers_enabled:
+             # We don't need to specify a domain ID in this case
++            LOG.debug("1Speedy Gonzalez")
+             return
+ 
+         if context['query_string'].get('domain_id') is not None:
++            LOG.debug("1Speedy Gonzalez")
+             return context['query_string'].get('domain_id')
+ 
+         try:
+@@ -700,22 +778,27 @@ class V3Controller(wsgi.Application):
+                 token_data=self.token_provider_api.validate_token(
+                     context['token_id']))
+         except KeyError:
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.ValidationError(
+                 _('domain_id is required as part of entity'))
+         except (exception.TokenNotFound,
+                 exception.UnsupportedTokenVersionException):
+             LOG.warning(_LW('Invalid token found while getting domain ID '
+                             'for list request'))
++            LOG.debug("1Speedy Gonzalez")
              raise exception.Unauthorized()
  
-+    @prepost(LOG)
+         if token_ref.domain_scoped:
++            LOG.debug("1Speedy Gonzalez")
+             return token_ref.domain_id
+         else:
+             LOG.warning(
+                 _LW('No domain information specified as part of list request'))
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.Unauthorized()
+ 
      def _get_domain_id_from_token(self, context):
++        LOG.debug("0Speedy Gonzalez")
          """Get the domain_id for a v3 create call.
  
-@@ -754,6 +778,7 @@ class V3Controller(wsgi.Application):
+         In the case of a v3 create entity call that does not specify a domain
+@@ -735,15 +818,18 @@ class V3Controller(wsgi.Application):
+                     context['token_id']))
+         except KeyError:
+             # This might happen if we use the Admin token, for instance
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.ValidationError(
+                 _('A domain-scoped token must be used'))
+         except (exception.TokenNotFound,
+                 exception.UnsupportedTokenVersionException):
+             LOG.warning(_LW('Invalid token found while getting domain ID '
+                             'for list request'))
++            LOG.debug("1Speedy Gonzalez")
+             raise exception.Unauthorized()
+ 
+         if token_ref.domain_scoped:
++            LOG.debug("1Speedy Gonzalez")
+             return token_ref.domain_id
+         else:
+             # TODO(henry-nash): We should issue an exception here since if
+@@ -752,12 +838,15 @@ class V3Controller(wsgi.Application):
+             # the current tempest heat tests issue a v3 call without this.
+             # This is raised as bug #1283539.  Once this is fixed, we
              # should remove the line below and replace it with an error.
++            LOG.debug("1Speedy Gonzalez")
              return CONF.identity.default_domain_id
  
-+    @prepost(LOG)
      def _normalize_domain_id(self, context, ref):
++        LOG.debug("0Speedy Gonzalez")
          """Fill in domain_id if not specified in a v3 call."""
          if 'domain_id' not in ref:
-@@ -765,6 +790,7 @@ class V3Controller(wsgi.Application):
-         """Override v2 filter to let domain_id out for v3 calls."""
+             ref['domain_id'] = self._get_domain_id_from_token(context)
++        LOG.debug("1Speedy Gonzalez")
          return ref
  
-+    @prepost(LOG)
+     @staticmethod
+@@ -766,6 +855,7 @@ class V3Controller(wsgi.Application):
+         return ref
+ 
      def check_protection(self, context, prep_info, target_attr=None):
++        LOG.debug("0Speedy Gonzalez")
          """Provide call protection for complex target attributes.
  
-diff --git a/keystone/common/dependency.py b/keystone/common/dependency.py
-index 14a68f1..cb1c1e5 100644
---- a/keystone/common/dependency.py
-+++ b/keystone/common/dependency.py
-@@ -25,6 +25,11 @@ See also:
- 
- """
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import traceback
- 
- import six
-@@ -40,6 +45,7 @@ _future_optionals = {}
- _factories = {}
- 
- 
-+@prepost(LOG)
- def _set_provider(name, provider):
-     _original_provider, where_registered = _REGISTRY.get(name, (None, None))
-     if where_registered:
-@@ -52,6 +58,7 @@ GET_REQUIRED = object()
- GET_OPTIONAL = object()
- 
- 
-+@prepost(LOG)
- def get_provider(name, optional=GET_REQUIRED):
-     if optional is GET_REQUIRED:
-         return _REGISTRY[name][0]
-@@ -64,12 +71,14 @@ class UnresolvableDependencyException(Exception):
-     See ``resolve_future_dependencies()`` for more details.
- 
-     """
-+    @prepost(LOG)
-     def __init__(self, name, targets):
-         msg = _('Unregistered dependency: %(name)s for %(targets)s') % {
-             'name': name, 'targets': targets}
-         super(UnresolvableDependencyException, self).__init__(msg)
- 
- 
-+@prepost(LOG)
- def provider(name):
-     """A class decorator used to register providers.
- 
-@@ -92,8 +101,11 @@ def provider(name):
-     used by different consumers.
- 
-     """
-+    @prepost(LOG)
-     def wrapper(cls):
-+        @prepost(LOG)
-         def wrapped(init):
-+            @prepost(LOG)
-             def register_event_callbacks(self):
-                 # NOTE(morganfainberg): A provider who has an implicit
-                 # dependency on other providers may utilize the event callback
-@@ -126,6 +138,7 @@ def provider(name):
-                                                               resource_type,
-                                                               callbacks)
- 
-+            @prepost(LOG)
-             def __wrapped_init__(self, *args, **kwargs):
-                 """Initialize the wrapped object and add it to the registry."""
-                 init(self, *args, **kwargs)
-@@ -142,11 +155,13 @@ def provider(name):
-     return wrapper
- 
- 
-+@prepost(LOG)
- def _process_dependencies(obj):
-     # Any dependencies that can be resolved immediately are resolved.
-     # Dependencies that cannot be resolved immediately are stored for
-     # resolution in resolve_future_dependencies.
- 
-+    @prepost(LOG)
-     def process(obj, attr_name, unresolved_in_out):
-         for dependency in getattr(obj, attr_name, []):
-             if dependency not in _REGISTRY:
-@@ -160,6 +175,7 @@ def _process_dependencies(obj):
-     process(obj, '_optionals', _future_optionals)
- 
- 
-+@prepost(LOG)
- def requires(*dependencies):
-     """A class decorator used to inject providers into consumers.
- 
-@@ -188,11 +204,13 @@ def requires(*dependencies):
-     ``resolve_future_dependencies()`` is called.
- 
-     """
-+    @prepost(LOG)
-     def wrapper(self, *args, **kwargs):
-         """Inject each dependency from the registry."""
-         self.__wrapped_init__(*args, **kwargs)
-         _process_dependencies(self)
- 
-+    @prepost(LOG)
-     def wrapped(cls):
-         """Note the required dependencies on the object for later injection.
- 
-@@ -210,17 +228,20 @@ def requires(*dependencies):
-     return wrapped
- 
- 
-+@prepost(LOG)
- def optional(*dependencies):
-     """Similar to ``@requires()``, except that the dependencies are optional.
- 
-     If no provider is available, the attributes will be set to ``None``.
- 
-     """
-+    @prepost(LOG)
-     def wrapper(self, *args, **kwargs):
-         """Inject each dependency from the registry."""
-         self.__wrapped_init__(*args, **kwargs)
-         _process_dependencies(self)
- 
-+    @prepost(LOG)
-     def wrapped(cls):
-         """Note the optional dependencies on the object for later injection.
- 
-@@ -238,6 +259,7 @@ def optional(*dependencies):
-     return wrapped
- 
- 
-+@prepost(LOG)
- def resolve_future_dependencies(__provider_name=None):
-     """Forces injection of all dependencies.
- 
-@@ -299,6 +321,7 @@ def resolve_future_dependencies(__provider_name=None):
-     return new_providers
- 
- 
-+@prepost(LOG)
- def reset():
-     """Reset the registry of providers.
- 
-diff --git a/keystone/common/driver_hints.py b/keystone/common/driver_hints.py
-index 0361e31..b58931f 100644
---- a/keystone/common/driver_hints.py
-+++ b/keystone/common/driver_hints.py
-@@ -14,6 +14,11 @@
- # under the License.
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- class Hints(object):
-     """Encapsulate driver hints for listing entities.
- 
-@@ -41,10 +46,12 @@ class Hints(object):
-     * ``type``: will always be 'filter'
- 
-     """
-+    @prepost(LOG)
-     def __init__(self):
-         self.limit = None
-         self.filters = list()
- 
-+    @prepost(LOG)
-     def add_filter(self, name, value, comparator='equals',
-                    case_sensitive=False):
-         """Adds a filter to the filters list, which is publicly accessible."""
-@@ -53,6 +60,7 @@ class Hints(object):
-                              'case_sensitive': case_sensitive,
-                              'type': 'filter'})
- 
-+    @prepost(LOG)
-     def get_exact_filter_by_name(self, name):
-         """Return a filter key and value if exact filter exists for name."""
-         for entry in self.filters:
-@@ -60,6 +68,7 @@ class Hints(object):
-                     entry['comparator'] == 'equals'):
-                 return entry
- 
-+    @prepost(LOG)
-     def set_limit(self, limit, truncated=False):
-         """Set a limit to indicate the list should be truncated."""
-         self.limit = {'limit': limit, 'type': 'limit', 'truncated': truncated}
-diff --git a/keystone/common/environment/eventlet_server.py b/keystone/common/environment/eventlet_server.py
-index 5c1a1ce..06c954e 100644
---- a/keystone/common/environment/eventlet_server.py
-+++ b/keystone/common/environment/eventlet_server.py
-@@ -16,6 +16,11 @@
- #    License for the specific language governing permissions and limitations
- #    under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import errno
- import re
- import socket
-@@ -52,11 +57,13 @@ class EventletFilteringLogger(loggers.WritableLogger):
-     # volume of data being written to the logs due to ~14 lines+ per traceback.
-     # The traceback in these cases are, at best, useful for limited debugging
-     # cases.
-+    @prepost(LOG)
-     def __init__(self, *args, **kwargs):
-         super(EventletFilteringLogger, self).__init__(*args, **kwargs)
-         self.regex = re.compile(r'errno (%d|%d)' %
-                                 (errno.EPIPE, errno.ECONNRESET), re.IGNORECASE)
- 
-+    @prepost(LOG)
-     def write(self, msg):
-         m = self.regex.search(msg)
-         if m:
-@@ -69,6 +76,7 @@ class EventletFilteringLogger(loggers.WritableLogger):
- class Server(object):
-     """Server class to manage multiple WSGI sockets and applications."""
- 
-+    @prepost(LOG)
-     def __init__(self, application, host=None, port=None, keepalive=False,
-                  keepidle=None):
-         self.application = application
-@@ -84,6 +92,7 @@ class Server(object):
-         self.keepidle = keepidle
-         self.socket = None
- 
-+    @prepost(LOG)
-     def listen(self, key=None, backlog=128):
-         """Create and start listening on socket.
- 
-@@ -117,6 +126,7 @@ class Server(object):
-                   'host': self.host,
-                   'port': self.port})
- 
-+    @prepost(LOG)
-     def start(self, key=None, backlog=128):
-         """Run a WSGI server with the given application."""
- 
-@@ -151,6 +161,7 @@ class Server(object):
-                                            self.application,
-                                            dup_socket)
- 
-+    @prepost(LOG)
-     def set_ssl(self, certfile, keyfile=None, ca_certs=None,
-                 cert_required=True):
-         self.certfile = certfile
-@@ -159,10 +170,12 @@ class Server(object):
-         self.cert_required = cert_required
-         self.do_ssl = True
- 
-+    @prepost(LOG)
-     def stop(self):
-         if self.greenthread is not None:
-             self.greenthread.kill()
- 
-+    @prepost(LOG)
-     def wait(self):
-         """Wait until all servers have completed running."""
-         try:
-@@ -172,6 +185,7 @@ class Server(object):
-         except greenlet.GreenletExit:
-             pass
- 
-+    @prepost(LOG)
-     def reset(self):
-         """Required by the service interface.
- 
-@@ -183,6 +197,7 @@ class Server(object):
-         """
-         pass
- 
-+    @prepost(LOG)
-     def _run(self, application, socket):
-         """Start a WSGI server with a new green thread pool."""
-         logger = log.getLogger('eventlet.wsgi.server')
-diff --git a/keystone/common/extension.py b/keystone/common/extension.py
-index b2ea80b..9f4e3c9 100644
---- a/keystone/common/extension.py
-+++ b/keystone/common/extension.py
-@@ -13,10 +13,16 @@
- # under the License.
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- ADMIN_EXTENSIONS = {}
- PUBLIC_EXTENSIONS = {}
- 
- 
-+@prepost(LOG)
- def register_admin_extension(url_prefix, extension_data):
-     """Register extension with collection of admin extensions.
- 
-@@ -39,6 +45,7 @@ def register_admin_extension(url_prefix, extension_data):
-     ADMIN_EXTENSIONS[url_prefix] = extension_data
- 
- 
-+@prepost(LOG)
- def register_public_extension(url_prefix, extension_data):
-     """Same as register_admin_extension but for public extensions."""
- 
-diff --git a/keystone/common/json_home.py b/keystone/common/json_home.py
-index 01fdce6..59b0d6c 100644
---- a/keystone/common/json_home.py
-+++ b/keystone/common/json_home.py
-@@ -13,17 +13,24 @@
- # under the License.
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import six
- 
- from keystone import exception
- from keystone.i18n import _
- 
- 
-+@prepost(LOG)
- def build_v3_resource_relation(resource_name):
-     return ('http://docs.openstack.org/api/openstack-identity/3/rel/%s' %
-             resource_name)
- 
- 
-+@prepost(LOG)
- def build_v3_extension_resource_relation(extension_name, extension_version,
-                                          resource_name):
-     return (
-@@ -31,11 +38,13 @@ def build_v3_extension_resource_relation(extension_name, extension_version,
-         (extension_name, extension_version, resource_name))
- 
- 
-+@prepost(LOG)
- def build_v3_parameter_relation(parameter_name):
-     return ('http://docs.openstack.org/api/openstack-identity/3/param/%s' %
-             parameter_name)
- 
- 
-+@prepost(LOG)
- def build_v3_extension_parameter_relation(extension_name, extension_version,
-                                           parameter_name):
-     return (
-@@ -79,6 +88,7 @@ class Status(object):
-             'Unexpected status requested for JSON Home response, %s') % status)
- 
- 
-+@prepost(LOG)
- def translate_urls(json_home, new_prefix):
-     """Given a JSON Home document, sticks new_prefix on each of the urls."""
- 
-diff --git a/keystone/common/kvs/backends/inmemdb.py b/keystone/common/kvs/backends/inmemdb.py
-index 68072ef..7ac2fed 100644
---- a/keystone/common/kvs/backends/inmemdb.py
-+++ b/keystone/common/kvs/backends/inmemdb.py
-@@ -16,6 +16,11 @@
- Keystone In-Memory Dogpile.cache backend implementation.
- """
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import copy
- 
- from dogpile.cache import api
-@@ -40,30 +45,38 @@ class MemoryBackend(api.CacheBackend):
-             'keystone.common.kvs.Memory'
-         )
-     """
-+    @prepost(LOG)
-     def __init__(self, arguments):
-         self._db = {}
- 
-+    @prepost(LOG)
-     def _isolate_value(self, value):
-         if value is not NO_VALUE:
-             return copy.deepcopy(value)
-         return value
- 
-+    @prepost(LOG)
-     def get(self, key):
-         return self._isolate_value(self._db.get(key, NO_VALUE))
- 
-+    @prepost(LOG)
-     def get_multi(self, keys):
-         return [self.get(key) for key in keys]
- 
-+    @prepost(LOG)
-     def set(self, key, value):
-         self._db[key] = self._isolate_value(value)
- 
-+    @prepost(LOG)
-     def set_multi(self, mapping):
-         for key, value in mapping.items():
-             self.set(key, value)
- 
-+    @prepost(LOG)
-     def delete(self, key):
-         self._db.pop(key, None)
- 
-+    @prepost(LOG)
-     def delete_multi(self, keys):
-         for key in keys:
-             self.delete(key)
-diff --git a/keystone/common/kvs/backends/memcached.py b/keystone/common/kvs/backends/memcached.py
-index db45314..240538e 100644
---- a/keystone/common/kvs/backends/memcached.py
-+++ b/keystone/common/kvs/backends/memcached.py
-@@ -16,6 +16,11 @@
- Keystone Memcached dogpile.cache backend implementation.
- """
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import random as _random
- import time
- 
-@@ -49,12 +54,14 @@ class MemcachedLock(object):
-     http://amix.dk/blog/post/19386
- 
-     """
-+    @prepost(LOG)
-     def __init__(self, client_fn, key, lock_timeout, max_lock_attempts):
-         self.client_fn = client_fn
-         self.key = "_lock" + key
-         self.lock_timeout = lock_timeout
-         self.max_lock_attempts = max_lock_attempts
- 
-+    @prepost(LOG)
-     def acquire(self, wait=True):
-         client = self.client_fn()
-         for i in range(self.max_lock_attempts):
-@@ -68,6 +75,7 @@ class MemcachedLock(object):
-         raise exception.UnexpectedError(
-             _('Maximum lock attempts on %s occurred.') % self.key)
- 
-+    @prepost(LOG)
-     def release(self):
-         client = self.client_fn()
-         client.delete(self.key)
-@@ -80,6 +88,7 @@ class MemcachedBackend(manager.Manager):
-     `memcached_driver` set to one of the provided memcached drivers (at this
-     time `memcached`, `bmemcached`, `pylibmc` are valid).
-     """
-+    @prepost(LOG)
-     def __init__(self, arguments):
-         self._key_mangler = None
-         self.raw_no_expiry_keys = set(arguments.pop('no_expiry_keys', set()))
-@@ -112,6 +121,7 @@ class MemcachedBackend(manager.Manager):
-             else:
-                 self.driver = VALID_DOGPILE_BACKENDS[backend](arguments)
- 
-+    @prepost(LOG)
-     def _get_set_arguments_driver_attr(self, exclude_expiry=False):
- 
-         # NOTE(morganfainberg): Shallow copy the .set_arguments dict to
-@@ -126,10 +136,12 @@ class MemcachedBackend(manager.Manager):
-             set_arguments.pop('time', None)
-         return set_arguments
- 
-+    @prepost(LOG)
-     def set(self, key, value):
-         mapping = {key: value}
-         self.set_multi(mapping)
- 
-+    @prepost(LOG)
-     def set_multi(self, mapping):
-         mapping_keys = set(mapping.keys())
-         no_expiry_keys = mapping_keys.intersection(self.no_expiry_hashed_keys)
-@@ -177,12 +189,14 @@ class MemcachedBackend(manager.Manager):
-         else:
-             raise TypeError(_('`key_mangler` functions must be callable.'))
- 
-+    @prepost(LOG)
-     def _rehash_keys(self):
-         no_expire = set()
-         for key in self.raw_no_expiry_keys:
-             no_expire.add(self._key_mangler(key))
-             self.no_expiry_hashed_keys = no_expire
- 
-+    @prepost(LOG)
-     def get_mutex(self, key):
-         return MemcachedLock(lambda: self.driver.client, key,
-                              self.lock_timeout, self.max_lock_attempts)
+         As well as including the standard parameters from the original API
+@@ -794,9 +884,11 @@ class V3Controller(wsgi.Application):
+                                     action,
+                                     utils.flatten_dict(policy_dict))
+             LOG.debug('RBAC: Authorization granted')
++            LOG.debug("1Speedy Gonzalez")
+ 
+     @classmethod
+     def check_immutable_params(cls, ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Raise exception when disallowed parameter is in ref.
+ 
+         Check whether the ref dictionary representing a request has only
+@@ -813,14 +905,17 @@ class V3Controller(wsgi.Application):
+ 
+         if not blocked_keys:
+             # No immutable parameters changed
++            LOG.debug("1Speedy Gonzalez")
+             return
+ 
+         exception_args = {'target': cls.__name__,
+                           'attributes': ', '.join(blocked_keys)}
++        LOG.debug("1Speedy Gonzalez")
+         raise exception.ImmutableAttributeError(**exception_args)
+ 
+     @classmethod
+     def filter_params(cls, ref):
++        LOG.debug("0Speedy Gonzalez")
+         """Remove unspecified parameters from the dictionary.
+ 
+         This function removes unspecified parameters from the dictionary. See
+@@ -835,4 +930,5 @@ class V3Controller(wsgi.Application):
+         blocked_keys = ref_keys - cls._public_parameters
+         for blocked_param in blocked_keys:
+             del ref[blocked_param]
++        LOG.debug("1Speedy Gonzalez")
+         return ref
 diff --git a/keystone/common/kvs/core.py b/keystone/common/kvs/core.py
-index cbbb746..f56903e 100644
+index cbbb746..71442c9 100644
 --- a/keystone/common/kvs/core.py
 +++ b/keystone/common/kvs/core.py
-@@ -12,6 +12,11 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import contextlib
- import threading
- import time
-@@ -45,6 +50,7 @@ LOG = log.getLogger(__name__)
- NO_VALUE = api.NO_VALUE
+@@ -46,6 +46,7 @@ NO_VALUE = api.NO_VALUE
  
  
-+@prepost(LOG)
  def _register_backends():
++    LOG.debug("0Speedy Gonzalez")
      # NOTE(morganfainberg): This function exists to ensure we do not try and
      # register the backends prior to the configuration object being fully
-@@ -77,6 +83,7 @@ class KeyValueStore(object):
-     This manager also supports the concept of locking a given key resource to
-     allow for a guaranteed atomic transaction to the backend.
-     """
-+    @prepost(LOG)
-     def __init__(self, kvs_region):
-         self.locking = True
-         self._lock_timeout = 0
-@@ -85,6 +92,7 @@ class KeyValueStore(object):
-         self._secret_key = None
-         self._lock_registry = nameregistry.NameRegistry(self._create_mutex)
+     # available.  We also need to ensure we do not register a given backend
+@@ -65,6 +66,7 @@ def _register_backends():
+                       {'backend_path': backend, 'backend_name': backend_name})
+             region.register_backend(backend_name, module, cls)
+         BACKENDS_REGISTERED = True
++    LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
+ 
+ class LockTimeout(exception.UnexpectedError):
+@@ -87,6 +89,7 @@ class KeyValueStore(object):
+ 
      def configure(self, backing_store, key_mangler=None, proxy_list=None,
                    locking=True, **region_config_args):
++        LOG.debug("0Speedy Gonzalez")
          """Configure the KeyValueStore instance.
-@@ -117,6 +125,7 @@ class KeyValueStore(object):
+ 
+         :param backing_store: dogpile.cache short name of the region backend
+@@ -103,6 +106,7 @@ class KeyValueStore(object):
+             # there are a lot of pitfalls and potential memory leaks that could
+             # occur.  By far the best approach is to re-create the KVS object
+             # with the new configuration.
++            LOG.debug("1Speedy Gonzalez")
+             raise RuntimeError(_('KVS region %s is already configured. '
+                                  'Cannot reconfigure.') % self._region.name)
+ 
+@@ -112,12 +116,14 @@ class KeyValueStore(object):
+         self._configure_region(backing_store, **region_config_args)
+         self._set_key_mangler(key_mangler)
+         self._apply_region_proxy(proxy_list)
++        LOG.debug("1Speedy Gonzalez")
+ 
+     @property
      def is_configured(self):
          return 'backend' in self._region.__dict__
  
-+    @prepost(LOG)
      def _apply_region_proxy(self, proxy_list):
++        LOG.debug("0Speedy Gonzalez")
          if isinstance(proxy_list, list):
              proxies = []
-@@ -140,12 +149,14 @@ class KeyValueStore(object):
+ 
+@@ -139,14 +145,18 @@ class KeyValueStore(object):
+                          {'proxy': proxy_cls.__name__,
                            'name': self._region.name})
                  self._region.wrap(proxy_cls)
++        LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def _assert_configured(self):
++        LOG.debug("0Speedy Gonzalez")
          if'backend' not in self._region.__dict__:
++            LOG.debug("1Speedy Gonzalez")
              raise exception.UnexpectedError(_('Key Value Store not '
                                                'configured: %s'),
                                              self._region.name)
  
-+    @prepost(LOG)
      def _set_keymangler_on_backend(self, key_mangler):
++            LOG.debug("0Speedy Gonzalez")
              try:
                  self._region.backend.key_mangler = key_mangler
-@@ -166,6 +177,7 @@ class KeyValueStore(object):
+             except Exception as e:
+@@ -164,9 +174,11 @@ class KeyValueStore(object):
+                                'key_mangler for backend: %(err)s'),
+                               {'region': self._region.name, 'err': e})
                  else:
++                    LOG.debug("1Speedy Gonzalez")
                      raise
  
-+    @prepost(LOG)
      def _set_key_mangler(self, key_mangler):
++        LOG.debug("0Speedy Gonzalez")
          # Set the key_mangler that is appropriate for the given region being
          # configured here.  The key_mangler function is called prior to storing
-@@ -211,6 +223,7 @@ class KeyValueStore(object):
+         # the value(s) in the backend.  This is to help prevent collisions and
+@@ -194,6 +206,7 @@ class KeyValueStore(object):
+                     # NOTE(morganfainberg): We failed to set the key_mangler,
+                     # we should error out here to ensure we aren't causing
+                     # key-length or collision issues.
++                    LOG.debug("1Speedy Gonzalez")
+                     raise exception.ValidationError(
+                         _('`key_mangler` option must be a function reference'))
+             else:
+@@ -210,8 +223,10 @@ class KeyValueStore(object):
+             LOG.info(_LI('KVS region %s key_mangler disabled.'),
                       self._region.name)
              self._set_keymangler_on_backend(None)
++        LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def _configure_region(self, backend, **config_args):
++        LOG.debug("0Speedy Gonzalez")
          prefix = CONF.kvs.config_prefix
          conf_dict = {}
-@@ -240,9 +253,11 @@ class KeyValueStore(object):
+         conf_dict['%s.backend' % prefix] = backend
+@@ -239,38 +254,50 @@ class KeyValueStore(object):
+         LOG.debug('KVS region configuration for %(name)s: %(config)r',
                    {'name': self._region.name, 'config': conf_dict})
          self._region.configure_from_config(conf_dict, '%s.' % prefix)
++        LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def _mutex(self, key):
          return self._lock_registry.get(key)
  
-+    @prepost(LOG)
      def _create_mutex(self, key):
++        LOG.debug("0Speedy Gonzalez")
          mutex = self._region.backend.get_mutex(key)
          if mutex is not None:
-@@ -252,16 +267,20 @@ class KeyValueStore(object):
++            LOG.debug("1Speedy Gonzalez")
+             return mutex
+         else:
++            LOG.debug("1Speedy Gonzalez")
+             return self._LockWrapper(lock_timeout=self._lock_timeout)
  
      class _LockWrapper(object):
          """weakref-capable threading.Lock wrapper."""
-+        @prepost(LOG)
          def __init__(self, lock_timeout):
++            LOG.debug("0Speedy Gonzalez")
              self.lock = threading.Lock()
              self.lock_timeout = lock_timeout
++            LOG.debug("1Speedy Gonzalez")
  
-+        @prepost(LOG)
          def acquire(self, wait=True):
              return self.lock.acquire(wait)
  
-+        @prepost(LOG)
          def release(self):
++            LOG.debug("0Speedy Gonzalez")
              self.lock.release()
++            LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def get(self, key):
++        LOG.debug("0Speedy Gonzalez")
          """Get a single value from the KVS backend."""
          self._assert_configured()
-@@ -270,6 +289,7 @@ class KeyValueStore(object):
+         value = self._region.get(key)
+         if value is NO_VALUE:
++            LOG.debug("1Speedy Gonzalez")
              raise exception.NotFound(target=key)
++        LOG.debug("1Speedy Gonzalez")
          return value
  
-+    @prepost(LOG)
      def get_multi(self, keys):
++        LOG.debug("0Speedy Gonzalez")
          """Get multiple values in a single call from the KVS backend."""
          self._assert_configured()
-@@ -286,12 +306,14 @@ class KeyValueStore(object):
+         values = self._region.get_multi(keys)
+@@ -283,16 +310,21 @@ class KeyValueStore(object):
+             # existent, we should raise a NotFound error to mimic the .get()
+             # method's behavior.  In all cases the internal dogpile NO_VALUE
+             # should be masked from the consumer of the KeyValueStore.
++            LOG.debug("1Speedy Gonzalez")
              raise exception.NotFound(target=not_found)
++        LOG.debug("1Speedy Gonzalez")
          return values
  
-+    @prepost(LOG)
      def set(self, key, value, lock=None):
++        LOG.debug("0Speedy Gonzalez")
          """Set a single value in the KVS backend."""
          self._assert_configured()
          with self._action_with_lock(key, lock):
              self._region.set(key, value)
++        LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def set_multi(self, mapping):
++        LOG.debug("0Speedy Gonzalez")
          """Set multiple key/value pairs in the KVS backend at once.
  
-@@ -302,6 +324,7 @@ class KeyValueStore(object):
+         Like delete_multi, this call does not serialize through the
+@@ -301,8 +333,10 @@ class KeyValueStore(object):
+         """
          self._assert_configured()
          self._region.set_multi(mapping)
++        LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def delete(self, key, lock=None):
++        LOG.debug("0Speedy Gonzalez")
          """Delete a single key from the KVS backend.
  
-@@ -315,6 +338,7 @@ class KeyValueStore(object):
+         This method will raise NotFound if the key doesn't exist.  The get and
+@@ -314,8 +348,10 @@ class KeyValueStore(object):
+         with self._action_with_lock(key, lock):
              self.get(key)
              self._region.delete(key)
++        LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def delete_multi(self, keys):
++        LOG.debug("0Speedy Gonzalez")
          """Delete multiple keys from the KVS backend in a single call.
  
-@@ -325,6 +349,7 @@ class KeyValueStore(object):
+         Like set_multi, this call does not serialize through the
+@@ -324,8 +360,10 @@ class KeyValueStore(object):
+         """
          self._assert_configured()
          self._region.delete_multi(keys)
++        LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def get_lock(self, key):
++        LOG.debug("0Speedy Gonzalez")
          """Get a write lock on the KVS value referenced by `key`.
  
-@@ -368,6 +393,7 @@ class KeyValueStoreLock(object):
+         The ability to get a context manager to pass into the set/delete
+@@ -337,9 +375,11 @@ class KeyValueStore(object):
+         self._assert_configured()
+         return KeyValueStoreLock(self._mutex(key), key, self.locking,
+                                  self._lock_timeout)
++        LOG.debug("1Speedy Gonzalez")
  
+     @contextlib.contextmanager
+     def _action_with_lock(self, key, lock=None):
++        LOG.debug("0Speedy Gonzalez")
+         """Wrapper context manager to validate and handle the lock and lock
+         timeout if passed in.
+         """
+@@ -347,18 +387,23 @@ class KeyValueStore(object):
+             # NOTE(morganfainberg): Locking only matters if a lock is passed in
+             # to this method.  If lock isn't a KeyValueStoreLock, treat this as
+             # if no locking needs to occur.
++            LOG.debug("1Speedy Gonzalez")
+             yield
+         else:
+             if not lock.key == key:
++                LOG.debug("1Speedy Gonzalez")
+                 raise ValueError(_('Lock key must match target key: %(lock)s '
+                                    '!= %(target)s') %
+                                  {'lock': lock.key, 'target': key})
+             if not lock.active:
++                LOG.debug("1Speedy Gonzalez")
+                 raise exception.ValidationError(_('Must be called within an '
+                                                   'active lock context.'))
+             if not lock.expired:
++                LOG.debug("1Speedy Gonzalez")
+                 yield
+             else:
++                LOG.debug("1Speedy Gonzalez")
+                 raise LockTimeout(target=key)
+ 
+ 
+@@ -369,32 +414,40 @@ class KeyValueStoreLock(object):
      This is only a write lock, and will not prevent reads from occurring.
      """
-+    @prepost(LOG)
      def __init__(self, mutex, key, locking_enabled=True, lock_timeout=0):
++        LOG.debug("0Speedy Gonzalez")
          self.mutex = mutex
          self.key = key
-@@ -376,6 +402,7 @@ class KeyValueStoreLock(object):
+         self.enabled = locking_enabled
+         self.lock_timeout = lock_timeout
          self.active = False
          self.acquire_time = 0
++        LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def acquire(self):
++        LOG.debug("0Speedy Gonzalez")
          if self.enabled:
              self.mutex.acquire()
-@@ -394,6 +421,7 @@ class KeyValueStoreLock(object):
+             LOG.debug('KVS lock acquired for: %s', self.key)
+         self.active = True
+         self.acquire_time = time.time()
++        LOG.debug("1Speedy Gonzalez")
+         return self
+ 
+     __enter__ = acquire
+ 
+     @property
+     def expired(self):
++        LOG.debug("0Speedy Gonzalez")
+         if self.lock_timeout:
+             calculated = time.time() - self.acquire_time + LOCK_WINDOW
++            LOG.debug("1Speedy Gonzalez")
+             return calculated > self.lock_timeout
          else:
++            LOG.debug("1Speedy Gonzalez")
              return False
  
-+    @prepost(LOG)
      def release(self):
++        LOG.debug("0Speedy Gonzalez")
          if self.enabled:
              self.mutex.release()
-@@ -403,10 +431,12 @@ class KeyValueStoreLock(object):
+             if not self.expired:
+@@ -402,12 +455,14 @@ class KeyValueStoreLock(object):
+             else:
                  LOG.warning(_LW('KVS lock released (timeout reached) for: %s'),
                              self.key)
++            LOG.debug("1Speedy Gonzalez")
  
-+    @prepost(LOG)
      def __exit__(self, exc_type, exc_val, exc_tb):
          self.release()
  
  
-+@prepost(LOG)
  def get_key_value_store(name, kvs_region=None):
++    LOG.debug("0Speedy Gonzalez")
      """Instantiate a new :class:`.KeyValueStore` or return a previous
      instantiation that has the same name.
-diff --git a/keystone/common/kvs/legacy.py b/keystone/common/kvs/legacy.py
-index ba03601..fe4263a 100644
---- a/keystone/common/kvs/legacy.py
-+++ b/keystone/common/kvs/legacy.py
-@@ -12,11 +12,17 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- from keystone import exception
- from keystone.openstack.common import versionutils
- 
- 
- class DictKvs(dict):
-+    @prepost(LOG)
-     def get(self, key, default=None):
-         try:
-             if isinstance(self[key], dict):
-@@ -28,12 +34,14 @@ class DictKvs(dict):
-                 return default
-             raise exception.NotFound(target=key)
- 
-+    @prepost(LOG)
-     def set(self, key, value):
-         if isinstance(value, dict):
-             self[key] = value.copy()
-         else:
-             self[key] = value[:]
- 
-+    @prepost(LOG)
-     def delete(self, key):
-         """Deletes an item, returning True on success, False otherwise."""
-         try:
-diff --git a/keystone/common/ldap/core.py b/keystone/common/ldap/core.py
-index 144c0cf..bf1eb2e 100644
---- a/keystone/common/ldap/core.py
-+++ b/keystone/common/ldap/core.py
-@@ -12,6 +12,11 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import abc
- import codecs
- import functools
-@@ -52,6 +57,7 @@ DN_ONLY = ['1.1']
- _utf8_encoder = codecs.getencoder('utf-8')
- 
- 
-+@prepost(LOG)
- def utf8_encode(value):
-     """Encode a basestring to UTF-8.
- 
-@@ -73,6 +79,7 @@ def utf8_encode(value):
- _utf8_decoder = codecs.getdecoder('utf-8')
- 
- 
-+@prepost(LOG)
- def utf8_decode(value):
-     """Decode a from UTF-8 into unicode.
- 
-@@ -89,6 +96,7 @@ def utf8_decode(value):
-     return six.text_type(value)
- 
- 
-+@prepost(LOG)
- def py2ldap(val):
-     """Type convert a Python value to a type accepted by LDAP (unicode).
- 
-@@ -106,6 +114,7 @@ def py2ldap(val):
-         return six.text_type(val)
- 
- 
-+@prepost(LOG)
- def enabled2py(val):
-     """Similar to ldap2py, only useful for the enabled attribute."""
- 
-@@ -120,6 +129,7 @@ def enabled2py(val):
-     return utf8_decode(val)
- 
- 
-+@prepost(LOG)
- def ldap2py(val):
-     """Convert an LDAP formatted value to Python type used by OpenStack.
- 
-@@ -132,6 +142,7 @@ def ldap2py(val):
-     return utf8_decode(val)
- 
- 
-+@prepost(LOG)
- def convert_ldap_result(ldap_result):
-     """Convert LDAP search result to Python types used by OpenStack.
- 
-@@ -174,6 +185,7 @@ def convert_ldap_result(ldap_result):
-     return py_result
- 
- 
-+@prepost(LOG)
- def safe_iter(attrs):
-     if attrs is None:
-         return
-@@ -184,6 +196,7 @@ def safe_iter(attrs):
-         yield attrs
- 
- 
-+@prepost(LOG)
- def parse_deref(opt):
-     try:
-         return LDAP_DEREF[opt]
-@@ -194,6 +207,7 @@ def parse_deref(opt):
-                           'options': ', '.join(LDAP_DEREF.keys()), })
- 
- 
-+@prepost(LOG)
- def parse_tls_cert(opt):
-     try:
-         return LDAP_TLS_CERTS[opt]
-@@ -205,6 +219,7 @@ def parse_tls_cert(opt):
-                 'options': ', '.join(LDAP_TLS_CERTS.keys())})
- 
- 
-+@prepost(LOG)
- def ldap_scope(scope):
-     try:
-         return LDAP_SCOPES[scope]
-@@ -215,6 +230,7 @@ def ldap_scope(scope):
-                 'options': ', '.join(LDAP_SCOPES.keys())})
- 
- 
-+@prepost(LOG)
- def prep_case_insensitive(value):
-     """Prepare a string for case-insensitive comparison.
- 
-@@ -226,6 +242,7 @@ def prep_case_insensitive(value):
-     return value
- 
- 
-+@prepost(LOG)
- def is_ava_value_equal(attribute_type, val1, val2):
-     """Returns True if and only if the AVAs are equal.
- 
-@@ -241,6 +258,7 @@ def is_ava_value_equal(attribute_type, val1, val2):
-     return prep_case_insensitive(val1) == prep_case_insensitive(val2)
- 
- 
-+@prepost(LOG)
- def is_rdn_equal(rdn1, rdn2):
-     """Returns True if and only if the RDNs are equal.
- 
-@@ -277,6 +295,7 @@ def is_rdn_equal(rdn1, rdn2):
-     return True
- 
- 
-+@prepost(LOG)
- def is_dn_equal(dn1, dn2):
-     """Returns True if and only if the DNs are equal.
- 
-@@ -305,6 +324,7 @@ def is_dn_equal(dn1, dn2):
-     return True
- 
- 
-+@prepost(LOG)
- def dn_startswith(descendant_dn, dn):
-     """Returns True if and only if the descendant_dn is under the dn.
- 
-@@ -489,9 +509,11 @@ class PythonLDAPHandler(LDAPHandler):
-     the methods in this class.
-     '''
- 
-+    @prepost(LOG)
-     def __init__(self, conn=None):
-         super(PythonLDAPHandler, self).__init__(conn=conn)
- 
-+    @prepost(LOG)
-     def connect(self, url, page_size=0, alias_dereferencing=None,
-                 use_tls=False, tls_cacertfile=None, tls_cacertdir=None,
-                 tls_req_cert='demand', chase_referrals=None, debug_level=None,
-@@ -519,27 +541,34 @@ class PythonLDAPHandler(LDAPHandler):
-         if chase_referrals is not None:
-             self.conn.set_option(ldap.OPT_REFERRALS, int(chase_referrals))
- 
-+    @prepost(LOG)
-     def set_option(self, option, invalue):
-         return self.conn.set_option(option, invalue)
- 
-+    @prepost(LOG)
-     def get_option(self, option):
-         return self.conn.get_option(option)
- 
-+    @prepost(LOG)
-     def simple_bind_s(self, who='', cred='',
-                       serverctrls=None, clientctrls=None):
-         return self.conn.simple_bind_s(who, cred, serverctrls, clientctrls)
- 
-+    @prepost(LOG)
-     def unbind_s(self):
-         return self.conn.unbind_s()
- 
-+    @prepost(LOG)
-     def add_s(self, dn, modlist):
-         return self.conn.add_s(dn, modlist)
- 
-+    @prepost(LOG)
-     def search_s(self, base, scope,
-                  filterstr='(objectClass=*)', attrlist=None, attrsonly=0):
-         return self.conn.search_s(base, scope, filterstr,
-                                   attrlist, attrsonly)
- 
-+    @prepost(LOG)
-     def search_ext(self, base, scope,
-                    filterstr='(objectClass=*)', attrlist=None, attrsonly=0,
-                    serverctrls=None, clientctrls=None,
-@@ -549,6 +578,7 @@ class PythonLDAPHandler(LDAPHandler):
-                                     serverctrls, clientctrls,
-                                     timeout, sizelimit)
- 
-+    @prepost(LOG)
-     def result3(self, msgid=ldap.RES_ANY, all=1, timeout=None,
-                 resp_ctrl_classes=None):
-         # The resp_ctrl_classes parameter is a recent addition to the
-@@ -556,16 +586,20 @@ class PythonLDAPHandler(LDAPHandler):
-         # To run with older versions of python-ldap we do not pass it.
-         return self.conn.result3(msgid, all, timeout)
- 
-+    @prepost(LOG)
-     def modify_s(self, dn, modlist):
-         return self.conn.modify_s(dn, modlist)
- 
-+    @prepost(LOG)
-     def delete_s(self, dn):
-         return self.conn.delete_s(dn)
- 
-+    @prepost(LOG)
-     def delete_ext_s(self, dn, serverctrls=None, clientctrls=None):
-         return self.conn.delete_ext_s(dn, serverctrls, clientctrls)
- 
- 
-+@prepost(LOG)
- def _common_ldap_initialization(url, use_tls=False, tls_cacertfile=None,
-                                 tls_cacertdir=None, tls_req_cert=None,
-                                 debug_level=None):
-@@ -628,11 +662,13 @@ class MsgId(list):
-     pass
- 
- 
-+@prepost(LOG)
- def use_conn_pool(func):
-     '''Use this only for connection pool specific ldap API.
- 
-     This adds connection object to decorated API as next argument after self.
-     '''
-+    @prepost(LOG)
-     def wrapper(self, *args, **kwargs):
-         # assert isinstance(self, PooledLDAPHandler)
-         with self._get_pool_connection() as conn:
-@@ -671,6 +707,7 @@ class PooledLDAPHandler(LDAPHandler):
- 
-     connection_pools = {}  # static connector pool dict
- 
-+    @prepost(LOG)
-     def __init__(self, conn=None, use_auth_pool=False):
-         super(PooledLDAPHandler, self).__init__(conn=conn)
-         self.who = ''
-@@ -680,6 +717,7 @@ class PooledLDAPHandler(LDAPHandler):
-         self.use_auth_pool = use_auth_pool
-         self.conn_pool = None
- 
-+    @prepost(LOG)
-     def connect(self, url, page_size=0, alias_dereferencing=None,
-                 use_tls=False, tls_cacertfile=None, tls_cacertdir=None,
-                 tls_req_cert='demand', chase_referrals=None, debug_level=None,
-@@ -721,9 +759,11 @@ class PooledLDAPHandler(LDAPHandler):
-                 max_lifetime=pool_conn_lifetime)
-             self.connection_pools[pool_url] = self.conn_pool
- 
-+    @prepost(LOG)
-     def set_option(self, option, invalue):
-         self.conn_options[option] = invalue
- 
-+    @prepost(LOG)
-     def get_option(self, option):
-         value = self.conn_options.get(option)
-         # if option was not specified explicitly, then use connection default
-@@ -733,6 +773,7 @@ class PooledLDAPHandler(LDAPHandler):
-                 value = conn.get_option(option)
-         return value
- 
-+    @prepost(LOG)
-     def _apply_options(self, conn):
-         # if connection has a lifetime, then it already has options specified
-         if conn.get_lifetime() > 30:
-@@ -740,9 +781,11 @@ class PooledLDAPHandler(LDAPHandler):
-         for option, invalue in six.iteritems(self.conn_options):
-             conn.set_option(option, invalue)
- 
-+    @prepost(LOG)
-     def _get_pool_connection(self):
-         return self.conn_pool.connection(self.who, self.cred)
- 
-+    @prepost(LOG)
-     def simple_bind_s(self, who='', cred='',
-                       serverctrls=None, clientctrls=None):
-         '''Not using use_conn_pool decorator here as this API takes cred as
-@@ -753,6 +796,7 @@ class PooledLDAPHandler(LDAPHandler):
-         with self._get_pool_connection() as conn:
-             self._apply_options(conn)
- 
-+    @prepost(LOG)
-     def unbind_s(self):
-         # After connection generator is done `with` statement execution block
-         # connection is always released via finally block in ldappool.
-@@ -769,6 +813,7 @@ class PooledLDAPHandler(LDAPHandler):
-         return conn.search_s(base, scope, filterstr, attrlist,
-                              attrsonly)
- 
-+    @prepost(LOG)
-     def search_ext(self, base, scope,
-                    filterstr='(objectClass=*)', attrlist=None, attrsonly=0,
-                    serverctrls=None, clientctrls=None,
-@@ -798,6 +843,7 @@ class PooledLDAPHandler(LDAPHandler):
-                                            None, None, None))
-         return res
- 
-+    @prepost(LOG)
-     def result3(self, msgid, all=1, timeout=None,
-                 resp_ctrl_classes=None):
-         '''This method is used to wait for and return the result of an
-@@ -856,17 +902,21 @@ class KeystoneLDAPHandler(LDAPHandler):
-     OpenStack.
-     '''
- 
-+    @prepost(LOG)
-     def __init__(self, conn=None):
-         super(KeystoneLDAPHandler, self).__init__(conn=conn)
-         self.page_size = 0
- 
-+    @prepost(LOG)
-     def __enter__(self):
-         return self
- 
-+    @prepost(LOG)
-     def _disable_paging(self):
-         # Disable the pagination from now on
-         self.page_size = 0
- 
-+    @prepost(LOG)
-     def connect(self, url, page_size=0, alias_dereferencing=None,
-                 use_tls=False, tls_cacertfile=None, tls_cacertdir=None,
-                 tls_req_cert='demand', chase_referrals=None, debug_level=None,
-@@ -885,12 +935,15 @@ class KeystoneLDAPHandler(LDAPHandler):
-                                  pool_conn_timeout=pool_conn_timeout,
-                                  pool_conn_lifetime=pool_conn_lifetime)
- 
-+    @prepost(LOG)
-     def set_option(self, option, invalue):
-         return self.conn.set_option(option, invalue)
- 
-+    @prepost(LOG)
-     def get_option(self, option):
-         return self.conn.get_option(option)
- 
-+    @prepost(LOG)
-     def simple_bind_s(self, who='', cred='',
-                       serverctrls=None, clientctrls=None):
-         LOG.debug("LDAP bind: who=%s", who)
-@@ -900,10 +953,12 @@ class KeystoneLDAPHandler(LDAPHandler):
-                                        serverctrls=serverctrls,
-                                        clientctrls=clientctrls)
- 
-+    @prepost(LOG)
-     def unbind_s(self):
-         LOG.debug("LDAP unbind")
-         return self.conn.unbind_s()
- 
-+    @prepost(LOG)
-     def add_s(self, dn, modlist):
-         ldap_attrs = [(kind, [py2ldap(x) for x in safe_iter(values)])
-                       for kind, values in modlist]
-@@ -918,6 +973,7 @@ class KeystoneLDAPHandler(LDAPHandler):
-                            for kind, values in ldap_attrs]
-         return self.conn.add_s(dn_utf8, ldap_attrs_utf8)
- 
-+    @prepost(LOG)
-     def search_s(self, base, scope,
-                  filterstr='(objectClass=*)', attrlist=None, attrsonly=0):
-         # NOTE(morganfainberg): Remove "None" singletons from this list, which
-@@ -947,6 +1003,7 @@ class KeystoneLDAPHandler(LDAPHandler):
- 
-         return py_result
- 
-+    @prepost(LOG)
-     def search_ext(self, base, scope,
-                    filterstr='(objectClass=*)', attrlist=None, attrsonly=0,
-                    serverctrls=None, clientctrls=None,
-@@ -963,6 +1020,7 @@ class KeystoneLDAPHandler(LDAPHandler):
-                                     serverctrls, clientctrls,
-                                     timeout, sizelimit)
- 
-+    @prepost(LOG)
-     def _paged_search_s(self, base, scope, filterstr, attrlist=None):
-         res = []
-         use_old_paging_api = False
-@@ -1030,6 +1088,7 @@ class KeystoneLDAPHandler(LDAPHandler):
-                 break
-         return res
- 
-+    @prepost(LOG)
-     def result3(self, msgid=ldap.RES_ANY, all=1, timeout=None,
-                 resp_ctrl_classes=None):
-         ldap_result = self.conn.result3(msgid, all, timeout, resp_ctrl_classes)
-@@ -1041,6 +1100,7 @@ class KeystoneLDAPHandler(LDAPHandler):
-         py_result = convert_ldap_result(ldap_result)
-         return py_result
- 
-+    @prepost(LOG)
-     def modify_s(self, dn, modlist):
-         ldap_modlist = [
-             (op, kind, (None if values is None
-@@ -1060,17 +1120,20 @@ class KeystoneLDAPHandler(LDAPHandler):
-             for op, kind, values in ldap_modlist]
-         return self.conn.modify_s(dn_utf8, ldap_modlist_utf8)
- 
-+    @prepost(LOG)
-     def delete_s(self, dn):
-         LOG.debug("LDAP delete: dn=%s", dn)
-         dn_utf8 = utf8_encode(dn)
-         return self.conn.delete_s(dn_utf8)
- 
-+    @prepost(LOG)
-     def delete_ext_s(self, dn, serverctrls=None, clientctrls=None):
-         LOG.debug('LDAP delete_ext: dn=%s serverctrls=%s clientctrls=%s',
-                   dn, serverctrls, clientctrls)
-         dn_utf8 = utf8_encode(dn)
-         return self.conn.delete_ext_s(dn_utf8, serverctrls, clientctrls)
- 
-+    @prepost(LOG)
-     def __exit__(self, exc_type, exc_val, exc_tb):
-         self.unbind_s()
- 
-@@ -1078,10 +1141,12 @@ class KeystoneLDAPHandler(LDAPHandler):
- _HANDLERS = {}
- 
- 
-+@prepost(LOG)
- def register_handler(prefix, handler):
-     _HANDLERS[prefix] = handler
- 
- 
-+@prepost(LOG)
- def _get_connection(conn_url, use_pool=False, use_auth_pool=False):
-     for prefix, handler in six.iteritems(_HANDLERS):
-         if conn_url.startswith(prefix):
-@@ -1093,6 +1158,7 @@ def _get_connection(conn_url, use_pool=False, use_auth_pool=False):
-         return PythonLDAPHandler()
- 
- 
-+@prepost(LOG)
- def filter_entity(entity_ref):
-     """Filter out private items in an entity dict.
- 
-@@ -1126,6 +1192,7 @@ class BaseLdap(object):
-     attribute_ignore = []
-     tree_dn = None
- 
-+    @prepost(LOG)
-     def __init__(self, conf):
-         self.LDAP_URL = conf.ldap.url
-         self.LDAP_USER = conf.ldap.user
-@@ -1209,12 +1276,14 @@ class BaseLdap(object):
- 
-         self.subtree_delete_enabled = conf.ldap.allow_subtree_delete
- 
-+    @prepost(LOG)
-     def _not_found(self, object_id):
-         if self.NotFound is None:
-             return exception.NotFound(target=object_id)
-         else:
-             return self.NotFound(**{self.notfound_arg: object_id})
- 
-+    @prepost(LOG)
-     def _parse_extra_attrs(self, option_list):
-         mapping = {}
-         for item in option_list:
-@@ -1229,6 +1298,7 @@ class BaseLdap(object):
-             mapping[ldap_attr] = attr_map
-         return mapping
- 
-+    @prepost(LOG)
-     def _is_dumb_member(self, member_dn):
-         """Checks that member is a dumb member.
- 
-@@ -1237,6 +1307,7 @@ class BaseLdap(object):
-         return (self.use_dumb_member
-                 and is_dn_equal(member_dn, self.dumb_member))
- 
-+    @prepost(LOG)
-     def get_connection(self, user=None, password=None, end_user_auth=False):
-         use_pool = self.use_pool
-         pool_size = self.pool_size
-@@ -1284,12 +1355,14 @@ class BaseLdap(object):
- 
-         return conn
- 
-+    @prepost(LOG)
-     def _id_to_dn_string(self, object_id):
-         return u'%s=%s,%s' % (self.id_attr,
-                               ldap.dn.escape_dn_chars(
-                                   six.text_type(object_id)),
-                               self.tree_dn)
- 
-+    @prepost(LOG)
-     def _id_to_dn(self, object_id):
-         if self.LDAP_SCOPE == ldap.SCOPE_ONELEVEL:
-             return self._id_to_dn_string(object_id)
-@@ -1312,6 +1385,7 @@ class BaseLdap(object):
-     def _dn_to_id(dn):
-         return utf8_decode(ldap.dn.str2dn(utf8_encode(dn))[0][0][1])
- 
-+    @prepost(LOG)
-     def _ldap_res_to_model(self, res):
-         # LDAP attribute names may be returned in a different case than
-         # they are defined in the mapping, so we need to check for keys
-@@ -1364,21 +1438,25 @@ class BaseLdap(object):
- 
-         return obj
- 
-+    @prepost(LOG)
-     def check_allow_create(self):
-         if not self.allow_create:
-             action = _('LDAP %s create') % self.options_name
-             raise exception.ForbiddenAction(action=action)
- 
-+    @prepost(LOG)
-     def check_allow_update(self):
-         if not self.allow_update:
-             action = _('LDAP %s update') % self.options_name
-             raise exception.ForbiddenAction(action=action)
- 
-+    @prepost(LOG)
-     def check_allow_delete(self):
-         if not self.allow_delete:
-             action = _('LDAP %s delete') % self.options_name
-             raise exception.ForbiddenAction(action=action)
- 
-+    @prepost(LOG)
-     def affirm_unique(self, values):
-         if values.get('name') is not None:
-             try:
-@@ -1400,6 +1478,7 @@ class BaseLdap(object):
-                                          details=_('Duplicate ID, %s.') %
-                                          values['id'])
- 
-+    @prepost(LOG)
-     def create(self, values):
-         self.affirm_unique(values)
-         object_classes = self.structural_classes + [self.object_class]
-@@ -1427,6 +1506,7 @@ class BaseLdap(object):
-             conn.add_s(self._id_to_dn(values['id']), attrs)
-         return values
- 
-+    @prepost(LOG)
-     def _ldap_get(self, object_id, ldap_filter=None):
-         query = (u'(&(%(id_attr)s=%(id)s)'
-                  u'%(filter)s'
-@@ -1452,6 +1532,7 @@ class BaseLdap(object):
-         except IndexError:
-             return None
- 
-+    @prepost(LOG)
-     def _ldap_get_all(self, ldap_filter=None):
-         query = u'(&%s(objectClass=%s))' % (ldap_filter or
-                                             self.ldap_filter or
-@@ -1468,11 +1549,13 @@ class BaseLdap(object):
-             except ldap.NO_SUCH_OBJECT:
-                 return []
- 
-+    @prepost(LOG)
-     def _ldap_get_list(self, search_base, scope, query_params=None,
-                        attrlist=None):
-         query = u'(objectClass=%s)' % self.object_class
-         if query_params:
- 
-+            @prepost(LOG)
-             def calc_filter(attrname, value):
-                 val_esc = ldap.filter.escape_filter_chars(value)
-                 return '(%s=%s)' % (attrname, val_esc)
-@@ -1483,6 +1566,7 @@ class BaseLdap(object):
-         with self.get_connection() as conn:
-             return conn.search_s(search_base, scope, query, attrlist)
- 
-+    @prepost(LOG)
-     def get(self, object_id, ldap_filter=None):
-         res = self._ldap_get(object_id, ldap_filter)
-         if res is None:
-@@ -1490,6 +1574,7 @@ class BaseLdap(object):
-         else:
-             return self._ldap_res_to_model(res)
- 
-+    @prepost(LOG)
-     def get_by_name(self, name, ldap_filter=None):
-         query = (u'(%s=%s)' % (self.attribute_mapping['name'],
-                                ldap.filter.escape_filter_chars(
-@@ -1500,10 +1585,12 @@ class BaseLdap(object):
-         except IndexError:
-             raise self._not_found(name)
- 
-+    @prepost(LOG)
-     def get_all(self, ldap_filter=None):
-         return [self._ldap_res_to_model(x)
-                 for x in self._ldap_get_all(ldap_filter)]
- 
-+    @prepost(LOG)
-     def update(self, object_id, values, old_obj=None):
-         if old_obj is None:
-             old_obj = self.get(object_id)
-@@ -1557,6 +1644,7 @@ class BaseLdap(object):
- 
-         return self.get(object_id)
- 
-+    @prepost(LOG)
-     def delete(self, object_id):
-         with self.get_connection() as conn:
-             try:
-@@ -1564,6 +1652,7 @@ class BaseLdap(object):
-             except ldap.NO_SUCH_OBJECT:
-                 raise self._not_found(object_id)
- 
-+    @prepost(LOG)
-     def deleteTree(self, object_id):
-         tree_delete_control = ldap.controls.LDAPControl(CONTROL_TREEDELETE,
-                                                         0,
-@@ -1601,6 +1690,7 @@ class BaseLdap(object):
-                 else:
-                     LOG.debug('No entries in LDAP subtree %s', dn)
- 
-+    @prepost(LOG)
-     def add_member(self, member_dn, member_list_dn):
-         """Add member to the member list.
- 
-@@ -1624,6 +1714,7 @@ class BaseLdap(object):
-             except ldap.NO_SUCH_OBJECT:
-                 raise self._not_found(member_list_dn)
- 
-+    @prepost(LOG)
-     def remove_member(self, member_dn, member_list_dn):
-         """Remove member from the member list.
- 
-@@ -1641,6 +1732,7 @@ class BaseLdap(object):
-             except ldap.NO_SUCH_OBJECT:
-                 raise self._not_found(member_list_dn)
- 
-+    @prepost(LOG)
-     def _delete_tree_nodes(self, search_base, scope, query_params=None):
-         query = u'(objectClass=%s)' % self.object_class
-         if query_params:
-@@ -1671,6 +1763,7 @@ class BaseLdap(object):
-                       'entries': not_deleted_nodes[:3],
-                       'dots': '...' if len(not_deleted_nodes) > 3 else ''})
- 
-+    @prepost(LOG)
-     def filter_query(self, hints, query=None):
-         """Applies filtering to a query.
- 
-@@ -1684,6 +1777,7 @@ class BaseLdap(object):
-         :returns query: LDAP query, updated with any filters satisfied
- 
-         """
-+        @prepost(LOG)
-         def build_filter(filter_, hints):
-             """Build a filter for the query.
- 
-@@ -1778,6 +1872,7 @@ class EnabledEmuMixIn(BaseLdap):
-     ${tree_dn} is self.tree_dn.
      """
- 
-+    @prepost(LOG)
-     def __init__(self, conf):
-         super(EnabledEmuMixIn, self).__init__(conf)
-         enabled_emulation = '%s_enabled_emulation' % self.options_name
-@@ -1799,6 +1894,7 @@ class EnabledEmuMixIn(BaseLdap):
-                            utf8_decode(naming_rdn[1]))
-         self.enabled_emulation_naming_attr = naming_attr
- 
-+    @prepost(LOG)
-     def _get_enabled(self, object_id):
-         dn = self._id_to_dn(object_id)
-         query = '(member=%s)' % dn
-@@ -1812,6 +1908,7 @@ class EnabledEmuMixIn(BaseLdap):
-             else:
-                 return bool(enabled_value)
- 
-+    @prepost(LOG)
-     def _add_enabled(self, object_id):
-         if not self._get_enabled(object_id):
-             modlist = [(ldap.MOD_ADD,
-@@ -1828,6 +1925,7 @@ class EnabledEmuMixIn(BaseLdap):
-                         attr_list[1][1].append(self.dumb_member)
-                     conn.add_s(self.enabled_emulation_dn, attr_list)
- 
-+    @prepost(LOG)
-     def _remove_enabled(self, object_id):
-         modlist = [(ldap.MOD_DELETE,
-                     'member',
-@@ -1838,6 +1936,7 @@ class EnabledEmuMixIn(BaseLdap):
-             except (ldap.NO_SUCH_OBJECT, ldap.NO_SUCH_ATTRIBUTE):
-                 pass
- 
-+    @prepost(LOG)
-     def create(self, values):
-         if self.enabled_emulation:
-             enabled_value = values.pop('enabled', True)
-@@ -1850,12 +1949,14 @@ class EnabledEmuMixIn(BaseLdap):
-         else:
-             return super(EnabledEmuMixIn, self).create(values)
- 
-+    @prepost(LOG)
-     def get(self, object_id, ldap_filter=None):
-         ref = super(EnabledEmuMixIn, self).get(object_id, ldap_filter)
-         if 'enabled' not in self.attribute_ignore and self.enabled_emulation:
-             ref['enabled'] = self._get_enabled(object_id)
-         return ref
- 
-+    @prepost(LOG)
-     def get_all(self, ldap_filter=None):
-         if 'enabled' not in self.attribute_ignore and self.enabled_emulation:
-             # had to copy BaseLdap.get_all here to ldap_filter by DN
-@@ -1868,6 +1969,7 @@ class EnabledEmuMixIn(BaseLdap):
-         else:
-             return super(EnabledEmuMixIn, self).get_all(ldap_filter)
- 
-+    @prepost(LOG)
-     def update(self, object_id, values, old_obj=None):
-         if 'enabled' not in self.attribute_ignore and self.enabled_emulation:
-             data = values.copy()
-@@ -1884,6 +1986,7 @@ class EnabledEmuMixIn(BaseLdap):
-             return super(EnabledEmuMixIn, self).update(
-                 object_id, values, old_obj)
- 
-+    @prepost(LOG)
-     def delete(self, object_id):
-         if self.enabled_emulation:
-             self._remove_enabled(object_id)
-diff --git a/keystone/common/manager.py b/keystone/common/manager.py
-index 28bf2ef..9cc1a2e 100644
---- a/keystone/common/manager.py
-+++ b/keystone/common/manager.py
-@@ -12,11 +12,17 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import functools
- 
- from oslo_utils import importutils
- 
- 
-+@prepost(LOG)
- def response_truncated(f):
-     """Truncate the list returned by the wrapped function.
- 
-@@ -66,9 +72,11 @@ class Manager(object):
- 
-     """
- 
-+    @prepost(LOG)
-     def __init__(self, driver_name):
-         self.driver = importutils.import_object(driver_name)
- 
-+    @prepost(LOG)
-     def __getattr__(self, name):
-         """Forward calls to the underlying driver."""
-         f = getattr(self.driver, name)
-diff --git a/keystone/common/models.py b/keystone/common/models.py
-index 3b3aabe..7e47477 100644
---- a/keystone/common/models.py
-+++ b/keystone/common/models.py
-@@ -19,8 +19,14 @@ Unless marked otherwise, all fields are strings.
- """
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- class Model(dict):
-     """Base model class."""
-+    @prepost(LOG)
-     def __hash__(self):
-         return self['id'].__hash__()
- 
-diff --git a/keystone/common/openssl.py b/keystone/common/openssl.py
-index 4eb7d1d..124067b 100644
---- a/keystone/common/openssl.py
-+++ b/keystone/common/openssl.py
-@@ -13,6 +13,11 @@
- # under the License.
- #
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import os
- 
- from oslo_config import cfg
-@@ -31,6 +36,7 @@ PUBLIC_FILE_PERMS = 0o644       # -rw-r--r--
- PRIVATE_FILE_PERMS = 0o640      # -rw-r-----
- 
- 
-+@prepost(LOG)
- def file_exists(file_path):
-     return os.path.exists(file_path)
- 
-@@ -42,6 +48,7 @@ class BaseCertificateConfigure(object):
- 
-     """
- 
-+    @prepost(LOG)
-     def __init__(self, conf_obj, server_conf_obj, keystone_user,
-                  keystone_group, rebuild, **kwargs):
-         self.conf_dir = os.path.dirname(server_conf_obj.ca_certs)
-@@ -74,6 +81,7 @@ class BaseCertificateConfigure(object):
-                      'assuming is v1.0 or newer')
-         self.ssl_dictionary.update(kwargs)
- 
-+    @prepost(LOG)
-     def exec_command(self, command):
-         to_exec = []
-         for cmd_part in command:
-@@ -101,6 +109,7 @@ class BaseCertificateConfigure(object):
-             e.output = output
-             raise e
- 
-+    @prepost(LOG)
-     def clean_up_existing_files(self):
-         files_to_clean = [self.ssl_dictionary['ca_private_key'],
-                           self.ssl_dictionary['ca_cert'],
-@@ -128,6 +137,7 @@ class BaseCertificateConfigure(object):
- 
-         return existing_files
- 
-+    @prepost(LOG)
-     def build_ssl_config_file(self):
-         utils.make_dirs(os.path.dirname(self.ssl_config_file_name),
-                         mode=PUBLIC_DIR_PERMS,
-@@ -162,6 +172,7 @@ class BaseCertificateConfigure(object):
-                               user=self.use_keystone_user,
-                               group=self.use_keystone_group, log=LOG)
- 
-+    @prepost(LOG)
-     def build_ca_cert(self):
-         ca_key_file = self.ssl_dictionary['ca_private_key']
-         utils.make_dirs(os.path.dirname(ca_key_file),
-@@ -195,6 +206,7 @@ class BaseCertificateConfigure(object):
-                               user=self.use_keystone_user,
-                               group=self.use_keystone_group, log=LOG)
- 
-+    @prepost(LOG)
-     def build_private_key(self):
-         signing_keyfile = self.ssl_dictionary['signing_key']
-         utils.make_dirs(os.path.dirname(signing_keyfile),
-@@ -209,6 +221,7 @@ class BaseCertificateConfigure(object):
-                               user=self.use_keystone_user,
-                               group=self.use_keystone_group, log=LOG)
- 
-+    @prepost(LOG)
-     def build_signing_cert(self):
-         signing_cert = self.ssl_dictionary['signing_cert']
- 
-@@ -230,6 +243,7 @@ class BaseCertificateConfigure(object):
-                                '-keyfile', '%(ca_private_key)s',
-                                '-infiles', '%(request_file)s'])
- 
-+    @prepost(LOG)
-     def run(self):
-         try:
-             existing_files = self.clean_up_existing_files()
-@@ -258,6 +272,7 @@ class ConfigurePKI(BaseCertificateConfigure):
- 
-     """
- 
-+    @prepost(LOG)
-     def __init__(self, keystone_user, keystone_group, rebuild=False):
-         super(ConfigurePKI, self).__init__(CONF.signing, CONF.signing,
-                                            keystone_user, keystone_group,
-@@ -271,6 +286,7 @@ class ConfigureSSL(BaseCertificateConfigure):
-     one will be generated using provided arguments.
-     """
- 
-+    @prepost(LOG)
-     def __init__(self, keystone_user, keystone_group, rebuild=False):
-         super(ConfigureSSL, self).__init__(CONF.ssl, CONF.eventlet_server_ssl,
-                                            keystone_user, keystone_group,
-diff --git a/keystone/common/pemutils.py b/keystone/common/pemutils.py
-old mode 100755
-new mode 100644
-index ddbe05c..93f18ac
---- a/keystone/common/pemutils.py
-+++ b/keystone/common/pemutils.py
-@@ -92,6 +92,11 @@ and consumption of PEM formatted data including:
- 
- """
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import base64
- import re
- 
-@@ -188,6 +193,7 @@ class PEMParseResult(object):
- 
-     """
- 
-+    @prepost(LOG)
-     def __init__(self, pem_type=None, pem_header=None,
-                  pem_start=None, pem_end=None,
-                  base64_start=None, base64_end=None,
-@@ -251,6 +257,7 @@ class PEMParseResult(object):
-             self._pem_header = pem_header
- 
- 
-+@prepost(LOG)
- def pem_search(text, start=0):
-     """Search for a block of PEM formatted data
- 
-@@ -315,6 +322,7 @@ def pem_search(text, start=0):
-     return result
- 
- 
-+@prepost(LOG)
- def parse_pem(text, pem_type=None, max_items=None):
-     """Scan text for PEM data, return list of PEM items
- 
-@@ -397,6 +405,7 @@ def parse_pem(text, pem_type=None, max_items=None):
-     return pem_blocks
- 
- 
-+@prepost(LOG)
- def get_pem_data(text, pem_type='cert'):
-     """Scan text for PEM data, return binary contents
- 
-@@ -420,6 +429,7 @@ def get_pem_data(text, pem_type='cert'):
-     return blocks[0].binary_data
- 
- 
-+@prepost(LOG)
- def is_pem(text, pem_type='cert'):
-     """Does this text contain a PEM block.
- 
-@@ -448,6 +458,7 @@ def is_pem(text, pem_type='cert'):
-         return False
- 
- 
-+@prepost(LOG)
- def base64_to_pem(base64_text, pem_type='cert'):
-     """Format string of base64 text into PEM format
- 
-@@ -485,6 +496,7 @@ def base64_to_pem(base64_text, pem_type='cert'):
-     return text
- 
- 
-+@prepost(LOG)
- def binary_to_pem(binary_data, pem_type='cert'):
-     """Format binary data into PEM format
- 
+@@ -420,4 +475,5 @@ def get_key_value_store(name, kvs_region=None):
+             kvs_region = region.make_region(name=name)
+         key_value_store = KeyValueStore(kvs_region)
+         KEY_VALUE_STORE_REGISTRY[name] = key_value_store
++    LOG.debug("1Speedy Gonzalez")
+     return key_value_store
 diff --git a/keystone/common/profiler.py b/keystone/common/profiler.py
-index b4c1357..fa040b5 100644
+index b4c1357..dd28cc3 100644
 --- a/keystone/common/profiler.py
 +++ b/keystone/common/profiler.py
-@@ -10,6 +10,11 @@
- #    License for the specific language governing permissions and limitations
- #    under the License.
+@@ -12,8 +12,8 @@
  
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
  import logging
  
- import osprofiler.notifier
-@@ -23,6 +28,7 @@ CONF = config.CONF
- LOG = logging.getLogger(__name__)
- 
- 
-+@prepost(LOG)
- def setup(name, host='0.0.0.0'):
- 
-     if CONF.profiler.enabled:
-diff --git a/keystone/common/router.py b/keystone/common/router.py
-index ce4e834..0c47434 100644
---- a/keystone/common/router.py
-+++ b/keystone/common/router.py
-@@ -12,11 +12,17 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- from keystone.common import json_home
- from keystone.common import wsgi
- 
- 
- class Router(wsgi.ComposableRouter):
-+    @prepost(LOG)
-     def __init__(self, controller, collection_key, key,
-                  resource_descriptions=None,
-                  is_entity_implemented=True):
-@@ -26,6 +32,7 @@ class Router(wsgi.ComposableRouter):
-         self._resource_descriptions = resource_descriptions
-         self._is_entity_implemented = is_entity_implemented
- 
-+    @prepost(LOG)
-     def add_routes(self, mapper):
-         collection_path = '/%(collection_key)s' % {
-             'collection_key': self.collection_key}
-diff --git a/keystone/common/sql/core.py b/keystone/common/sql/core.py
-index 78c9e65..eb92ba4 100644
---- a/keystone/common/sql/core.py
-+++ b/keystone/common/sql/core.py
-@@ -18,6 +18,11 @@ Before using this module, call initialize(). This has to be done before
- CONF() because it sets up configuration options.
- 
- """
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import contextlib
- import functools
- 
-@@ -67,6 +72,7 @@ joinedload = sql.orm.joinedload
- flag_modified = flag_modified
- 
- 
-+@prepost(LOG)
- def initialize():
-     """Initialize the module."""
- 
-@@ -75,6 +81,7 @@ def initialize():
-         connection="sqlite:///keystone.db")
- 
- 
-+@prepost(LOG)
- def initialize_decorator(init):
-     """Ensure that the length of string field do not exceed the limit.
- 
-@@ -87,6 +94,7 @@ def initialize_decorator(init):
-     definition.
- 
-     """
-+    @prepost(LOG)
-     def initialize(self, *args, **kwargs):
-         cls = type(self)
-         for k, v in kwargs.items():
-@@ -112,9 +120,11 @@ class JsonBlob(sql_types.TypeDecorator):
- 
-     impl = sql.Text
- 
-+    @prepost(LOG)
-     def process_bind_param(self, value, dialect):
-         return jsonutils.dumps(value)
- 
-+    @prepost(LOG)
-     def process_result_value(self, value, dialect):
-         return jsonutils.loads(value)
- 
-@@ -131,6 +141,7 @@ class DictBase(models.ModelBase):
- 
-         return cls(**new_d)
- 
-+    @prepost(LOG)
-     def to_dict(self, include_extra_dict=False):
-         """Returns the model's attributes as a dictionary.
- 
-@@ -148,6 +159,7 @@ class DictBase(models.ModelBase):
- 
-         return d
- 
-+    @prepost(LOG)
-     def __getitem__(self, key):
-         if key in self.extra:
-             return self.extra[key]
-@@ -161,6 +173,7 @@ class ModelDictMixin(object):
-         """Returns a model instance from a dictionary."""
-         return cls(**d)
- 
-+    @prepost(LOG)
-     def to_dict(self):
-         """Returns the model's attributes as a dictionary."""
-         names = (column.name for column in self.__table__.columns)
-@@ -170,6 +183,7 @@ class ModelDictMixin(object):
- _engine_facade = None
- 
- 
-+@prepost(LOG)
- def _get_engine_facade():
-     global _engine_facade
- 
-@@ -182,16 +196,19 @@ def _get_engine_facade():
-     return _engine_facade
- 
- 
-+@prepost(LOG)
- def cleanup():
-     global _engine_facade
- 
-     _engine_facade = None
- 
- 
-+@prepost(LOG)
- def get_engine():
-     return _get_engine_facade().get_engine()
- 
- 
-+@prepost(LOG)
- def get_session(expire_on_commit=False):
-     return _get_engine_facade().get_session(expire_on_commit=expire_on_commit)
- 
-@@ -204,6 +221,7 @@ def transaction(expire_on_commit=False):
-         yield session
- 
- 
-+@prepost(LOG)
- def truncated(f):
-     """Ensure list truncation is detected in Driver list entity methods.
- 
-@@ -243,6 +261,7 @@ def truncated(f):
-     return wrapper
- 
- 
-+@prepost(LOG)
- def _filter(model, query, hints):
-     """Applies filtering to a query.
- 
-@@ -255,6 +274,7 @@ def _filter(model, query, hints):
-     :returns query: query, updated with any filters satisfied
- 
-     """
-+    @prepost(LOG)
-     def inexact_filter(model, query, filter_, satisfied_filters, hints):
-         """Applies an inexact filter to a query.
- 
-@@ -295,6 +315,7 @@ def _filter(model, query, hints):
-         satisfied_filters.append(filter_)
-         return query.filter(query_term)
- 
-+    @prepost(LOG)
-     def exact_filter(
-             model, filter_, satisfied_filters, cumulative_filter_dict, hints):
-         """Applies an exact filter to a query.
-@@ -344,6 +365,7 @@ def _filter(model, query, hints):
-     return query
- 
- 
-+@prepost(LOG)
- def _limit(query, hints):
-     """Applies a limit to a query.
- 
-@@ -362,6 +384,7 @@ def _limit(query, hints):
-     return query
- 
- 
-+@prepost(LOG)
- def filter_limit_query(model, query, hints):
-     """Applies filtering and limit to a query.
- 
-@@ -395,10 +418,12 @@ def filter_limit_query(model, query, hints):
-         return query
- 
- 
-+@prepost(LOG)
- def handle_conflicts(conflict_type='object'):
-     """Converts select sqlalchemy exceptions into HTTP 409 Conflict."""
-     _conflict_msg = 'Conflict %(conflict_type)s: %(details)s'
- 
-+    @prepost(LOG)
-     def decorator(method):
-         @functools.wraps(method)
-         def wrapper(*args, **kwargs):
-diff --git a/keystone/common/sql/migrate_repo/manage.py b/keystone/common/sql/migrate_repo/manage.py
-index 39fa389..ba84d99 100644
---- a/keystone/common/sql/migrate_repo/manage.py
-+++ b/keystone/common/sql/migrate_repo/manage.py
-@@ -1,4 +1,9 @@
- #!/usr/bin/env python
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- from migrate.versioning.shell import main
- 
- if __name__ == '__main__':
-diff --git a/keystone/common/sql/migrate_repo/versions/044_icehouse.py b/keystone/common/sql/migrate_repo/versions/044_icehouse.py
-index 6f326ec..6e182cb 100644
---- a/keystone/common/sql/migrate_repo/versions/044_icehouse.py
-+++ b/keystone/common/sql/migrate_repo/versions/044_icehouse.py
-@@ -11,6 +11,11 @@
- # under the License.
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import migrate
- from oslo_config import cfg
- from oslo_log import log
-@@ -26,6 +31,7 @@ LOG = log.getLogger(__name__)
- CONF = cfg.CONF
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-@@ -274,6 +280,7 @@ def upgrade(migrate_engine):
-     session.commit()
- 
- 
-+@prepost(LOG)
- def downgrade(migrate_engine):
-     raise NotImplementedError('Downgrade to pre-Icehouse release db schema is '
-                               'unsupported.')
-diff --git a/keystone/common/sql/migrate_repo/versions/045_placeholder.py b/keystone/common/sql/migrate_repo/versions/045_placeholder.py
-index 2a98fb9..e116516 100644
---- a/keystone/common/sql/migrate_repo/versions/045_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/045_placeholder.py
-@@ -17,5 +17,10 @@
- # http://lists.openstack.org/pipermail/openstack-dev/2013-March/006827.html
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/046_placeholder.py b/keystone/common/sql/migrate_repo/versions/046_placeholder.py
-index 2a98fb9..e116516 100644
---- a/keystone/common/sql/migrate_repo/versions/046_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/046_placeholder.py
-@@ -17,5 +17,10 @@
- # http://lists.openstack.org/pipermail/openstack-dev/2013-March/006827.html
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/047_placeholder.py b/keystone/common/sql/migrate_repo/versions/047_placeholder.py
-index 2a98fb9..e116516 100644
---- a/keystone/common/sql/migrate_repo/versions/047_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/047_placeholder.py
-@@ -17,5 +17,10 @@
- # http://lists.openstack.org/pipermail/openstack-dev/2013-March/006827.html
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/048_placeholder.py b/keystone/common/sql/migrate_repo/versions/048_placeholder.py
-index 2a98fb9..e116516 100644
---- a/keystone/common/sql/migrate_repo/versions/048_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/048_placeholder.py
-@@ -17,5 +17,10 @@
- # http://lists.openstack.org/pipermail/openstack-dev/2013-March/006827.html
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/049_placeholder.py b/keystone/common/sql/migrate_repo/versions/049_placeholder.py
-index 2a98fb9..e116516 100644
---- a/keystone/common/sql/migrate_repo/versions/049_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/049_placeholder.py
-@@ -17,5 +17,10 @@
- # http://lists.openstack.org/pipermail/openstack-dev/2013-March/006827.html
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/050_fk_consistent_indexes.py b/keystone/common/sql/migrate_repo/versions/050_fk_consistent_indexes.py
-index 2cde841..387de77 100644
---- a/keystone/common/sql/migrate_repo/versions/050_fk_consistent_indexes.py
-+++ b/keystone/common/sql/migrate_repo/versions/050_fk_consistent_indexes.py
-@@ -13,9 +13,15 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy as sa
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
- 
-     if migrate_engine.name == 'mysql':
-diff --git a/keystone/common/sql/migrate_repo/versions/051_add_id_mapping.py b/keystone/common/sql/migrate_repo/versions/051_add_id_mapping.py
-index 59720f6..efd40a4 100644
---- a/keystone/common/sql/migrate_repo/versions/051_add_id_mapping.py
-+++ b/keystone/common/sql/migrate_repo/versions/051_add_id_mapping.py
-@@ -12,6 +12,11 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy as sql
- 
- from keystone.identity.mapping_backends import mapping
-@@ -20,6 +25,7 @@ from keystone.identity.mapping_backends import mapping
- MAPPING_TABLE = 'id_mapping'
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-diff --git a/keystone/common/sql/migrate_repo/versions/052_add_auth_url_to_region.py b/keystone/common/sql/migrate_repo/versions/052_add_auth_url_to_region.py
-index e85edf3..43f0828 100644
---- a/keystone/common/sql/migrate_repo/versions/052_add_auth_url_to_region.py
-+++ b/keystone/common/sql/migrate_repo/versions/052_add_auth_url_to_region.py
-@@ -12,11 +12,17 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy as sql
- 
- _REGION_TABLE_NAME = 'region'
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-diff --git a/keystone/common/sql/migrate_repo/versions/053_endpoint_to_region_association.py b/keystone/common/sql/migrate_repo/versions/053_endpoint_to_region_association.py
-index a25aa7a..d0a733e 100644
---- a/keystone/common/sql/migrate_repo/versions/053_endpoint_to_region_association.py
-+++ b/keystone/common/sql/migrate_repo/versions/053_endpoint_to_region_association.py
-@@ -38,11 +38,17 @@ c. Remove the column region
- 
- """
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import migrate
- import sqlalchemy as sql
- from sqlalchemy.orm import sessionmaker
- 
- 
-+@prepost(LOG)
- def _migrate_to_region_id(migrate_engine, region_table, endpoint_table):
-     endpoints = list(endpoint_table.select().execute())
- 
-@@ -74,6 +80,7 @@ def _migrate_to_region_id(migrate_engine, region_table, endpoint_table):
-         name='fk_endpoint_region_id').create()
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-diff --git a/keystone/common/sql/migrate_repo/versions/054_add_actor_id_index.py b/keystone/common/sql/migrate_repo/versions/054_add_actor_id_index.py
-index 0d6a1a3..ef6765e 100644
---- a/keystone/common/sql/migrate_repo/versions/054_add_actor_id_index.py
-+++ b/keystone/common/sql/migrate_repo/versions/054_add_actor_id_index.py
-@@ -12,11 +12,17 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy as sql
- 
- ASSIGNMENT_TABLE = 'assignment'
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-diff --git a/keystone/common/sql/migrate_repo/versions/055_add_indexes_to_token_table.py b/keystone/common/sql/migrate_repo/versions/055_add_indexes_to_token_table.py
-index a7f327e..902ca20 100644
---- a/keystone/common/sql/migrate_repo/versions/055_add_indexes_to_token_table.py
-+++ b/keystone/common/sql/migrate_repo/versions/055_add_indexes_to_token_table.py
-@@ -12,9 +12,15 @@
- 
- """Add indexes to `user_id` and `trust_id` columns for the `token` table."""
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy as sql
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-diff --git a/keystone/common/sql/migrate_repo/versions/056_placeholder.py b/keystone/common/sql/migrate_repo/versions/056_placeholder.py
-index 8bb4049..263fbc8 100644
---- a/keystone/common/sql/migrate_repo/versions/056_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/056_placeholder.py
-@@ -14,5 +14,10 @@
- # Kilo work. New Kilo work starts after all the placeholders.
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/057_placeholder.py b/keystone/common/sql/migrate_repo/versions/057_placeholder.py
-index 8bb4049..263fbc8 100644
---- a/keystone/common/sql/migrate_repo/versions/057_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/057_placeholder.py
-@@ -14,5 +14,10 @@
- # Kilo work. New Kilo work starts after all the placeholders.
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/058_placeholder.py b/keystone/common/sql/migrate_repo/versions/058_placeholder.py
-index 8bb4049..263fbc8 100644
---- a/keystone/common/sql/migrate_repo/versions/058_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/058_placeholder.py
-@@ -14,5 +14,10 @@
- # Kilo work. New Kilo work starts after all the placeholders.
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/059_placeholder.py b/keystone/common/sql/migrate_repo/versions/059_placeholder.py
-index 8bb4049..263fbc8 100644
---- a/keystone/common/sql/migrate_repo/versions/059_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/059_placeholder.py
-@@ -14,5 +14,10 @@
- # Kilo work. New Kilo work starts after all the placeholders.
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/060_placeholder.py b/keystone/common/sql/migrate_repo/versions/060_placeholder.py
-index 8bb4049..263fbc8 100644
---- a/keystone/common/sql/migrate_repo/versions/060_placeholder.py
-+++ b/keystone/common/sql/migrate_repo/versions/060_placeholder.py
-@@ -14,5 +14,10 @@
- # Kilo work. New Kilo work starts after all the placeholders.
- 
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- def upgrade(migrate_engine):
-     pass
-diff --git a/keystone/common/sql/migrate_repo/versions/061_add_parent_project.py b/keystone/common/sql/migrate_repo/versions/061_add_parent_project.py
-index 5be3fcb..6efcbc0 100644
---- a/keystone/common/sql/migrate_repo/versions/061_add_parent_project.py
-+++ b/keystone/common/sql/migrate_repo/versions/061_add_parent_project.py
-@@ -10,6 +10,11 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy as sql
- 
- from keystone.common.sql import migration_helpers
-@@ -18,6 +23,7 @@ _PROJECT_TABLE_NAME = 'project'
- _PARENT_ID_COLUMN_NAME = 'parent_id'
- 
- 
-+@prepost(LOG)
- def list_constraints(project_table):
-     constraints = [{'table': project_table,
-                     'fk_column': _PARENT_ID_COLUMN_NAME,
-@@ -26,6 +32,7 @@ def list_constraints(project_table):
-     return constraints
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-diff --git a/keystone/common/sql/migrate_repo/versions/062_drop_assignment_role_fk.py b/keystone/common/sql/migrate_repo/versions/062_drop_assignment_role_fk.py
-index f7a69bb..2b19fef 100644
---- a/keystone/common/sql/migrate_repo/versions/062_drop_assignment_role_fk.py
-+++ b/keystone/common/sql/migrate_repo/versions/062_drop_assignment_role_fk.py
-@@ -10,11 +10,17 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy
- 
- from keystone.common.sql import migration_helpers
- 
- 
-+@prepost(LOG)
- def list_constraints(migrate_engine):
-     meta = sqlalchemy.MetaData()
-     meta.bind = migrate_engine
-@@ -27,6 +33,7 @@ def list_constraints(migrate_engine):
-     return constraints
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     # SQLite does not support constraints, and querying the constraints
-     # raises an exception
-diff --git a/keystone/common/sql/migrate_repo/versions/063_drop_region_auth_url.py b/keystone/common/sql/migrate_repo/versions/063_drop_region_auth_url.py
-index ddf0d54..342b00f 100644
---- a/keystone/common/sql/migrate_repo/versions/063_drop_region_auth_url.py
-+++ b/keystone/common/sql/migrate_repo/versions/063_drop_region_auth_url.py
-@@ -10,11 +10,17 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy as sql
- 
- _REGION_TABLE_NAME = 'region'
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-diff --git a/keystone/common/sql/migrate_repo/versions/064_drop_user_and_group_fk.py b/keystone/common/sql/migrate_repo/versions/064_drop_user_and_group_fk.py
-index 637f215..fdabad4 100644
---- a/keystone/common/sql/migrate_repo/versions/064_drop_user_and_group_fk.py
-+++ b/keystone/common/sql/migrate_repo/versions/064_drop_user_and_group_fk.py
-@@ -10,11 +10,17 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy
- 
- from keystone.common.sql import migration_helpers
- 
- 
-+@prepost(LOG)
- def list_constraints(migrate_engine):
-     meta = sqlalchemy.MetaData()
-     meta.bind = migrate_engine
-@@ -31,6 +37,7 @@ def list_constraints(migrate_engine):
-     return constraints
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     # SQLite does not support constraints, and querying the constraints
-     # raises an exception
-diff --git a/keystone/common/sql/migrate_repo/versions/065_add_domain_config.py b/keystone/common/sql/migrate_repo/versions/065_add_domain_config.py
-index c0745de..eaf588b 100644
---- a/keystone/common/sql/migrate_repo/versions/065_add_domain_config.py
-+++ b/keystone/common/sql/migrate_repo/versions/065_add_domain_config.py
-@@ -10,6 +10,11 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy as sql
- 
- from keystone.common import sql as ks_sql
-@@ -18,6 +23,7 @@ WHITELIST_TABLE = 'whitelisted_config'
- SENSITIVE_TABLE = 'sensitive_config'
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-diff --git a/keystone/common/sql/migrate_repo/versions/066_fixup_service_name_value.py b/keystone/common/sql/migrate_repo/versions/066_fixup_service_name_value.py
-index fe0cee8..2c5c2d5 100644
---- a/keystone/common/sql/migrate_repo/versions/066_fixup_service_name_value.py
-+++ b/keystone/common/sql/migrate_repo/versions/066_fixup_service_name_value.py
-@@ -10,10 +10,16 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- from oslo_serialization import jsonutils
- import sqlalchemy as sql
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     meta = sql.MetaData()
-     meta.bind = migrate_engine
-diff --git a/keystone/common/sql/migrate_repo/versions/067_drop_redundant_mysql_index.py b/keystone/common/sql/migrate_repo/versions/067_drop_redundant_mysql_index.py
-index b9df1a5..9a0b6cf 100644
---- a/keystone/common/sql/migrate_repo/versions/067_drop_redundant_mysql_index.py
-+++ b/keystone/common/sql/migrate_repo/versions/067_drop_redundant_mysql_index.py
-@@ -10,9 +10,15 @@
- # License for the specific language governing permissions and limitations
- # under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import sqlalchemy
- 
- 
-+@prepost(LOG)
- def upgrade(migrate_engine):
-     # NOTE(viktors): Migration 062 removed FK from `assignment` table, but
-     # MySQL silently creates indexes on FK constraints, so we should remove
-diff --git a/keystone/common/sql/migration_helpers.py b/keystone/common/sql/migration_helpers.py
-index 64f34c9..af87425 100644
---- a/keystone/common/sql/migration_helpers.py
-+++ b/keystone/common/sql/migration_helpers.py
-@@ -14,6 +14,11 @@
- #    License for the specific language governing permissions and limitations
- #    under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import os
- import sys
- 
-@@ -42,6 +47,7 @@ DEFAULT_EXTENSIONS = ['endpoint_filter',
-                       ]
- 
- 
-+@prepost(LOG)
- def get_default_domain():
-     # Return the reference used for the default domain structure during
-     # sql migrations.
-@@ -58,6 +64,7 @@ def get_default_domain():
- #  Constraints.  SQLAlchemy does not yet attempt to determine the name
- #  for the constraint, and instead attempts to deduce it from the column.
- #  This fails on MySQL.
-+@prepost(LOG)
- def get_constraints_names(table, column_name):
-     fkeys = [fk.name for fk in table.constraints
-              if (isinstance(fk, sqlalchemy.ForeignKeyConstraint) and
-@@ -73,6 +80,7 @@ def get_constraints_names(table, column_name):
- #               is added to or dropped from this column
- #  'ref_column':a sqlalchemy column object.  This is the reference column
- #               for the constraint.
-+@prepost(LOG)
- def remove_constraints(constraints):
-     for constraint_def in constraints:
-         constraint_names = get_constraints_names(constraint_def['table'],
-@@ -85,6 +93,7 @@ def remove_constraints(constraints):
-                 name=constraint_name).drop()
- 
- 
-+@prepost(LOG)
- def add_constraints(constraints):
-     for constraint_def in constraints:
- 
-@@ -106,6 +115,7 @@ def add_constraints(constraints):
-             refcolumns=[constraint_def['ref_column']]).create()
- 
- 
-+@prepost(LOG)
- def rename_tables_with_constraints(renames, constraints, engine):
-     """Renames tables with foreign key constraints.
- 
-@@ -130,6 +140,7 @@ def rename_tables_with_constraints(renames, constraints, engine):
-         add_constraints(constraints)
- 
- 
-+@prepost(LOG)
- def find_migrate_repo(package=None, repo_name='migrate_repo'):
-     package = package or sql
-     path = os.path.abspath(os.path.join(
-@@ -139,6 +150,7 @@ def find_migrate_repo(package=None, repo_name='migrate_repo'):
-     raise exception.MigrationNotProvided(package.__name__, path)
- 
- 
-+@prepost(LOG)
- def _sync_common_repo(version):
-     abs_path = find_migrate_repo()
-     init_version = migrate_repo.DB_INIT_VERSION
-@@ -148,6 +160,7 @@ def _sync_common_repo(version):
-                       init_version=init_version)
- 
- 
-+@prepost(LOG)
- def _fix_federation_tables(engine):
-     """Fix the identity_provider, federation_protocol and mapping tables
-      to be InnoDB and Charset UTF8.
-@@ -177,6 +190,7 @@ def _fix_federation_tables(engine):
-         engine.execute("SET foreign_key_checks = 1")
- 
- 
-+@prepost(LOG)
- def _assert_not_schema_downgrade(extension=None, version=None):
-     if version is not None:
-         try:
-@@ -189,6 +203,7 @@ def _assert_not_schema_downgrade(extension=None, version=None):
-             pass
- 
- 
-+@prepost(LOG)
- def _sync_extension_repo(extension, version):
-     init_version = 0
-     engine = sql.get_engine()
-@@ -237,6 +252,7 @@ def _sync_extension_repo(extension, version):
-             raise
- 
- 
-+@prepost(LOG)
- def sync_database_to_version(extension=None, version=None):
-     if not extension:
-         _sync_common_repo(version)
-@@ -249,6 +265,7 @@ def sync_database_to_version(extension=None, version=None):
-         _sync_extension_repo(extension, version)
- 
- 
-+@prepost(LOG)
- def get_db_version(extension=None):
-     if not extension:
-         return migration.db_version(sql.get_engine(), find_migrate_repo(),
-@@ -265,6 +282,7 @@ def get_db_version(extension=None):
-         sql.get_engine(), find_migrate_repo(package), 0)
- 
- 
-+@prepost(LOG)
- def print_db_version(extension=None):
-     try:
-         db_version = get_db_version(extension=extension)
-diff --git a/keystone/common/utils.py b/keystone/common/utils.py
-index a4b03ff..b35e084 100644
---- a/keystone/common/utils.py
-+++ b/keystone/common/utils.py
-@@ -16,6 +16,11 @@
- #    License for the specific language governing permissions and limitations
- #    under the License.
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import calendar
- import collections
- import grp
-@@ -40,6 +45,7 @@ CONF = cfg.CONF
- LOG = log.getLogger(__name__)
- 
- 
-+@prepost(LOG)
- def flatten_dict(d, parent_key=''):
-     """Flatten a nested dictionary
- 
-@@ -57,6 +63,7 @@ def flatten_dict(d, parent_key=''):
-     return dict(items)
- 
- 
-+@prepost(LOG)
- def read_cached_file(filename, cache_info, reload_func=None):
-     """Read from a file if it has been modified.
- 
-@@ -79,6 +86,7 @@ def read_cached_file(filename, cache_info, reload_func=None):
- 
- class SmarterEncoder(jsonutils.json.JSONEncoder):
-     """Help for JSON encoding dict-like objects."""
-+    @prepost(LOG)
-     def default(self, obj):
-         if not isinstance(obj, dict) and hasattr(obj, 'iteritems'):
-             return dict(obj.iteritems())
-@@ -91,6 +99,7 @@ class PKIEncoder(SmarterEncoder):
-     key_separator = ':'
- 
- 
-+@prepost(LOG)
- def verify_length_and_trunc_password(password):
-     """Verify and truncate the provided password to the max_password_length."""
-     max_length = CONF.identity.max_password_length
-@@ -109,12 +118,14 @@ def verify_length_and_trunc_password(password):
-         raise exception.ValidationError(attribute='string', target='password')
- 
- 
-+@prepost(LOG)
- def hash_access_key(access):
-     hash_ = hashlib.sha256()
-     hash_.update(access)
-     return hash_.hexdigest()
- 
- 
-+@prepost(LOG)
- def hash_user_password(user):
-     """Hash a user dict's password without modifying the passed-in dict."""
-     password = user.get('password')
-@@ -124,6 +135,7 @@ def hash_user_password(user):
-     return dict(user, password=hash_password(password))
- 
- 
-+@prepost(LOG)
- def hash_password(password):
-     """Hash a password. Hard."""
-     password_utf8 = verify_length_and_trunc_password(password).encode('utf-8')
-@@ -131,6 +143,7 @@ def hash_password(password):
-         password_utf8, rounds=CONF.crypt_strength)
- 
- 
-+@prepost(LOG)
- def check_password(password, hashed):
-     """Check that a plaintext password matches hashed.
- 
-@@ -144,6 +157,7 @@ def check_password(password, hashed):
-     return passlib.hash.sha512_crypt.verify(password_utf8, hashed)
- 
- 
-+@prepost(LOG)
- def attr_as_boolean(val_attr):
-     """Returns the boolean value, decoded from a string.
- 
-@@ -156,6 +170,7 @@ def attr_as_boolean(val_attr):
-     return strutils.bool_from_string(val_attr, default=True)
- 
- 
-+@prepost(LOG)
- def get_blob_from_credential(credential):
-     try:
-         blob = jsonutils.loads(credential.blob)
-@@ -168,6 +183,7 @@ def get_blob_from_credential(credential):
-     return blob
- 
- 
-+@prepost(LOG)
- def convert_ec2_to_v3_credential(ec2credential):
-     blob = {'access': ec2credential.access,
-             'secret': ec2credential.secret}
-@@ -179,6 +195,7 @@ def convert_ec2_to_v3_credential(ec2credential):
-             'extra': jsonutils.dumps({})}
- 
- 
-+@prepost(LOG)
- def convert_v3_to_ec2_credential(credential):
-     blob = get_blob_from_credential(credential)
-     return {'access': blob.get('access'),
-@@ -188,6 +205,7 @@ def convert_v3_to_ec2_credential(credential):
-             }
- 
- 
-+@prepost(LOG)
- def unixtime(dt_obj):
-     """Format datetime object as unix timestamp
- 
-@@ -198,6 +216,7 @@ def unixtime(dt_obj):
-     return calendar.timegm(dt_obj.utctimetuple())
- 
- 
-+@prepost(LOG)
- def auth_str_equal(provided, known):
-     """Constant-time string comparison.
- 
-@@ -222,6 +241,7 @@ def auth_str_equal(provided, known):
-     return (p_len == k_len) & (result == 0)
- 
- 
-+@prepost(LOG)
- def setup_remote_pydev_debug():
-     if CONF.pydev_debug_host and CONF.pydev_debug_port:
-         try:
-@@ -243,6 +263,7 @@ def setup_remote_pydev_debug():
-             raise
- 
- 
-+@prepost(LOG)
- def get_unix_user(user=None):
-     '''Get the uid and user name.
- 
-@@ -298,6 +319,7 @@ def get_unix_user(user=None):
-     return user_info.pw_uid, user_info.pw_name
- 
- 
-+@prepost(LOG)
- def get_unix_group(group=None):
-     '''Get the gid and group name.
- 
-@@ -356,6 +378,7 @@ def get_unix_group(group=None):
-     return group_info.gr_gid, group_info.gr_name
- 
- 
-+@prepost(LOG)
- def set_permissions(path, mode=None, user=None, group=None, log=None):
-     '''Set the ownership and permissions on the pathname.
- 
-@@ -419,6 +442,7 @@ def set_permissions(path, mode=None, user=None, group=None, log=None):
-                                    (path, mode, exc.strerror))
- 
- 
-+@prepost(LOG)
- def make_dirs(path, mode=None, user=None, group=None, log=None):
-     '''Assure directory exists, set ownership and permissions.
- 
-@@ -461,10 +485,12 @@ def make_dirs(path, mode=None, user=None, group=None, log=None):
- 
- class WhiteListedItemFilter(object):
- 
-+    @prepost(LOG)
-     def __init__(self, whitelist, data):
-         self._whitelist = set(whitelist or [])
-         self._data = data
- 
-+    @prepost(LOG)
-     def __getitem__(self, name):
-         if name not in self._whitelist:
-             raise KeyError
-diff --git a/keystone/common/validation/parameter_types.py b/keystone/common/validation/parameter_types.py
-index 1bc8138..17314e5 100644
---- a/keystone/common/validation/parameter_types.py
-+++ b/keystone/common/validation/parameter_types.py
-@@ -11,6 +11,11 @@
- # under the License.
- """Common parameter types for validating a request reference."""
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- boolean = {
-     'type': 'boolean',
-     'enum': [True, False]
-diff --git a/keystone/common/validation/validators.py b/keystone/common/validation/validators.py
-index a457417..e0b1127 100644
---- a/keystone/common/validation/validators.py
-+++ b/keystone/common/validation/validators.py
-@@ -11,6 +11,11 @@
- # under the License.
- """Internal implementation of request body validating middleware."""
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import jsonschema
- 
- from keystone import exception
-@@ -23,6 +28,7 @@ class SchemaValidator(object):
-     validator = None
-     validator_org = jsonschema.Draft4Validator
- 
-+    @prepost(LOG)
-     def __init__(self, schema):
-         # NOTE(lbragstad): If at some point in the future we want to extend
-         # our validators to include something specific we need to check for,
-@@ -37,6 +43,7 @@ class SchemaValidator(object):
-         fc = jsonschema.FormatChecker()
-         self.validator = validator_cls(schema, format_checker=fc)
- 
-+    @prepost(LOG)
-     def validate(self, *args, **kwargs):
-         try:
-             self.validator.validate(*args, **kwargs)
-diff --git a/keystone/common/wsgi.py b/keystone/common/wsgi.py
-index bbe3fc1..84d5565 100644
---- a/keystone/common/wsgi.py
-+++ b/keystone/common/wsgi.py
-@@ -18,6 +18,11 @@
- 
- """Utility methods for working with WSGI servers."""
- 
-+# start Speedy add
-+from keystone.mytracer import prepost
-+from oslo_log import log as logging
-+LOG = logging.getLogger(__name__)
-+# end Speedy add
- import copy
- import itertools
- import urllib
-@@ -54,6 +59,7 @@ CONTEXT_ENV = 'openstack.context'
- PARAMS_ENV = 'openstack.params'
- 
- 
-+@prepost(LOG)
- def validate_token_bind(context, token_ref):
-     bind_mode = CONF.token.enforce_token_bind
- 
-@@ -109,6 +115,7 @@ def validate_token_bind(context, token_ref):
-             raise exception.Unauthorized()
- 
- 
-+@prepost(LOG)
- def best_match_language(req):
-     """Determines the best available locale from the Accept-Language
-     HTTP header passed in the request.
-@@ -148,6 +155,7 @@ class BaseApplication(object):
-         """
-         return cls(**local_config)
- 
-+    @prepost(LOG)
-     def __call__(self, environ, start_response):
-         r"""Subclasses will probably want to implement __call__ like this:
- 
-@@ -272,6 +280,7 @@ class Application(BaseApplication):
-         return render_response(body=result, status=response_code,
-                                method=req_method)
- 
-+    @prepost(LOG)
-     def _get_response_code(self, req):
-         req_method = req.environ['REQUEST_METHOD']
-         controller = importutils.import_class('keystone.common.controller')
-@@ -280,12 +289,15 @@ class Application(BaseApplication):
-             code = (201, 'Created')
-         return code
- 
-+    @prepost(LOG)
-     def _normalize_arg(self, arg):
-         return arg.replace(':', '_').replace('-', '_')
- 
-+    @prepost(LOG)
-     def _normalize_dict(self, d):
-         return {self._normalize_arg(k): v for (k, v) in six.iteritems(d)}
- 
-+    @prepost(LOG)
-     def assert_admin(self, context):
-         if not context['is_admin']:
-             try:
-@@ -315,12 +327,14 @@ class Application(BaseApplication):
-             # Accept either is_admin or the admin role
-             self.policy_api.enforce(creds, 'admin_required', {})
- 
-+    @prepost(LOG)
-     def _attribute_is_empty(self, ref, attribute):
-         """Returns true if the attribute in the given ref (which is a
-         dict) is empty or None.
-         """
-         return ref.get(attribute) is None or ref.get(attribute) == ''
- 
-+    @prepost(LOG)
-     def _require_attribute(self, ref, attribute):
-         """Ensures the reference contains the specified attribute.
- 
-@@ -330,6 +344,7 @@ class Application(BaseApplication):
-             msg = _('%s field is required and cannot be empty') % attribute
-             raise exception.ValidationError(message=msg)
- 
-+    @prepost(LOG)
-     def _require_attributes(self, ref, attrs):
-         """Ensures the reference contains the specified attributes.
- 
-@@ -342,6 +357,7 @@ class Application(BaseApplication):
-             msg = _('%s field(s) cannot be empty') % ', '.join(missing_attrs)
-             raise exception.ValidationError(message=msg)
- 
-+    @prepost(LOG)
-     def _get_trust_id_for_request(self, context):
-         """Get the trust_id for a call.
- 
-@@ -419,16 +435,19 @@ class Middleware(Application):
-         but using the kwarg passing it shouldn't be necessary.
- 
-         """
-+        @prepost(LOG)
-         def _factory(app):
-             conf = global_config.copy()
-             conf.update(local_config)
-             return cls(app, **local_config)
-         return _factory
- 
-+    @prepost(LOG)
-     def __init__(self, application):
-         super(Middleware, self).__init__()
-         self.application = application
- 
-+    @prepost(LOG)
-     def process_request(self, request):
-         """Called on each request.
- 
-@@ -439,6 +458,7 @@ class Middleware(Application):
-         """
-         return None
- 
-+    @prepost(LOG)
-     def process_response(self, request, response):
-         """Do whatever you'd like to the response, based on the request."""
-         return response
-@@ -511,6 +531,7 @@ class Debug(Middleware):
- class Router(object):
-     """WSGI middleware that maps incoming requests to WSGI apps."""
- 
-+    @prepost(LOG)
-     def __init__(self, mapper):
-         """Create a router for the given routes.Mapper.
- 
-@@ -569,6 +590,7 @@ class Router(object):
- 
- 
- class ComposingRouter(Router):
-+    @prepost(LOG)
-     def __init__(self, mapper=None, routers=None):
-         if mapper is None:
-             mapper = routes.Mapper()
-@@ -582,12 +604,14 @@ class ComposingRouter(Router):
- class ComposableRouter(Router):
-     """Router that supports use by ComposingRouter."""
- 
-+    @prepost(LOG)
-     def __init__(self, mapper=None):
-         if mapper is None:
-             mapper = routes.Mapper()
-         self.add_routes(mapper)
-         super(ComposableRouter, self).__init__(mapper)
- 
-+    @prepost(LOG)
-     def add_routes(self, mapper):
-         """Add routes to given mapper."""
-         pass
-@@ -598,6 +622,7 @@ class ExtensionRouter(Router):
- 
-     Expects to be subclassed.
-     """
-+    @prepost(LOG)
-     def __init__(self, application, mapper=None):
-         if mapper is None:
-             mapper = routes.Mapper()
-@@ -606,6 +631,7 @@ class ExtensionRouter(Router):
-         mapper.connect('{path_info:.*}', controller=self.application)
-         super(ExtensionRouter, self).__init__(mapper)
- 
-+    @prepost(LOG)
-     def add_routes(self, mapper):
-         pass
- 
-@@ -632,6 +658,7 @@ class ExtensionRouter(Router):
-         but using the kwarg passing it shouldn't be necessary.
- 
-         """
-+        @prepost(LOG)
-         def _factory(app):
-             conf = global_config.copy()
-             conf.update(local_config)
-@@ -642,9 +669,11 @@ class ExtensionRouter(Router):
- class RoutersBase(object):
-     """Base class for Routers."""
- 
-+    @prepost(LOG)
-     def __init__(self):
-         self.v3_resources = []
- 
-+    @prepost(LOG)
-     def append_v3_routers(self, mapper, routers):
-         """Append v3 routers.
- 
-@@ -653,6 +682,7 @@ class RoutersBase(object):
-         Use self._add_resource() to map routes for a resource.
-         """
- 
-+    @prepost(LOG)
-     def _add_resource(self, mapper, controller, path, rel,
-                       get_action=None, head_action=None, get_head_action=None,
-                       put_action=None, post_action=None, patch_action=None,
-@@ -707,10 +737,12 @@ class RoutersBase(object):
- class V3ExtensionRouter(ExtensionRouter, RoutersBase):
-     """Base class for V3 extension router."""
- 
-+    @prepost(LOG)
-     def __init__(self, application, mapper=None):
-         self.v3_resources = list()
-         super(V3ExtensionRouter, self).__init__(application, mapper)
- 
-+    @prepost(LOG)
-     def _update_version_response(self, response_data):
-         response_data['resources'].update(self.v3_resources)
- 
-@@ -738,6 +770,7 @@ class V3ExtensionRouter(ExtensionRouter, RoutersBase):
-         return response
- 
- 
-+@prepost(LOG)
- def render_response(body=None, status=None, headers=None, method=None):
-     """Forms a WSGI response."""
-     if headers is None:
-@@ -785,6 +818,7 @@ def render_response(body=None, status=None, headers=None, method=None):
-     return resp
- 
- 
-+@prepost(LOG)
- def render_exception(error, context=None, request=None, user_locale=None):
-     """Forms a WSGI response based on the current error."""
- 
-diff --git a/keystone/mytracer.py b/keystone/mytracer.py
-new file mode 100644
-index 0000000..0e33ddb
---- /dev/null
-+++ b/keystone/mytracer.py
-@@ -0,0 +1,19 @@
-+import inspect
-+import time
-+
-+def prepost(logger):
-+    def outer_wrap(func):
-+        def inner_wrap(*args, **kwargs):
-+            # get module, file and lineno to show in nice format
-+            l = str(func.__code__).translate(None, '<>,"').split()
-+            module = str(inspect.getmodule(func).__name__ + "." + l[2])
-+            file = l[6]
-+            lineno = l[-1]
-+            logger.debug("0Speedy Gonzalez %s %s %s $$$", module, file, lineno)
-+            t1 = time.time()
-+            result = func(*args, **kwargs)
-+            t2 = time.time()
-+            logger.debug("1Speedy Gonzalez %s %s %s time=%s $$$", module, file, lineno, str(t2 - t1))
-+            return result
-+        return inner_wrap
-+    return outer_wrap
+-import osprofiler.notifier
+ import oslo_messaging
++import osprofiler.notifier
+ 
+ from keystone import config
+ from keystone import notifications
 -- 
-2.4.3
+2.1.0
 
