@@ -1,7 +1,7 @@
-From 5bc3561bb5cfad00762c43845ea78a3f9d1380e4 Mon Sep 17 00:00:00 2001
+From 12f1e72ddbbbfa625d29434a5e1c758c52c5cb3c Mon Sep 17 00:00:00 2001
 From: Alberto Murillo <alberto.murillo.silva@intel.com>
 Date: Tue, 30 Jun 2015 08:45:46 -0500
-Subject: [PATCH 4/4] disable admin_token by default
+Subject: [PATCH] disable admin_token by default
 
 Documentation[1] highly recommends to edit paste.ini but this is bad[2]
 Instead, users should be able to simply remove or comment out admin_token
@@ -17,14 +17,14 @@ compatible across releases
  keystone/tests/unit/test_middleware.py |  4 ++++
  keystone/tests/unit/test_v2.py         |  1 +
  keystone/tests/unit/test_v3.py         |  4 ++++
- keystone/tests/unit/test_v3_auth.py    | 10 +++++++++-
- 6 files changed, 25 insertions(+), 9 deletions(-)
+ keystone/tests/unit/test_v3_auth.py    |  8 ++++++++
+ 6 files changed, 24 insertions(+), 8 deletions(-)
 
 diff --git a/keystone/common/config.py b/keystone/common/config.py
-index d8e2b0c..aef4bce 100644
+index e5d3538..a312d55 100644
 --- a/keystone/common/config.py
 +++ b/keystone/common/config.py
-@@ -24,14 +24,12 @@ _SSO_CALLBACK = '/etc/keystone/sso_callback_template.html'
+@@ -25,14 +25,12 @@ _SSO_CALLBACK = '/etc/keystone/sso_callback_template.html'
  
  FILE_OPTIONS = {
      None: [
@@ -40,14 +40,14 @@ index d8e2b0c..aef4bce 100644
 +                        'and carries no explicit authorization. It is '
 +                        'highly recommended to keep it disabled in '
 +                        'production.'),
-         cfg.IntOpt('compute_port', default=8774,
-                    help='(Deprecated) The port which the OpenStack Compute '
-                         'service listens on. This option was only used for '
+         cfg.StrOpt('public_endpoint',
+                    help='The base public endpoint URL for Keystone that is '
+                         'advertised to clients (NOTE: this does NOT affect '
 diff --git a/keystone/middleware/core.py b/keystone/middleware/core.py
-index bf86cd2..eb0a8a9 100644
+index 75be5b2..2cd4bac 100644
 --- a/keystone/middleware/core.py
 +++ b/keystone/middleware/core.py
-@@ -67,7 +67,8 @@ class AdminTokenAuthMiddleware(wsgi.Middleware):
+@@ -71,7 +71,8 @@ class AdminTokenAuthMiddleware(wsgi.Middleware):
      def process_request(self, request):
          token = request.headers.get(AUTH_TOKEN_HEADER)
          context = request.environ.get(CONTEXT_ENV, {})
@@ -57,7 +57,7 @@ index bf86cd2..eb0a8a9 100644
          request.environ[CONTEXT_ENV] = context
  
  
-@@ -201,7 +202,7 @@ class AuthContextMiddleware(wsgi.Middleware):
+@@ -176,7 +177,7 @@ class AuthContextMiddleware(wsgi.Middleware):
      def _build_auth_context(self, request):
          token_id = request.headers.get(AUTH_TOKEN_HEADER).strip()
  
@@ -67,37 +67,37 @@ index bf86cd2..eb0a8a9 100644
              # token is being handled by AdminTokenAuthMiddleware. This code
              # will not be impacted even if AdminTokenAuthMiddleware is removed
 diff --git a/keystone/tests/unit/test_middleware.py b/keystone/tests/unit/test_middleware.py
-index 3a26dd2..ce23c8d 100644
+index 0eedb9c..4d6d70e 100644
 --- a/keystone/tests/unit/test_middleware.py
 +++ b/keystone/tests/unit/test_middleware.py
-@@ -50,6 +50,10 @@ class TokenAuthMiddlewareTest(tests.TestCase):
+@@ -51,6 +51,10 @@ def make_response(**kwargs):
  
  
- class AdminTokenAuthMiddlewareTest(tests.TestCase):
+ class TokenAuthMiddlewareTest(unit.TestCase):
 +    def config_overrides(self):
 +        super(AdminTokenAuthMiddlewareTest, self).config_overrides()
 +        self.config_fixture.config(admin_token='ADMIN')
 +
-     def test_request_admin(self):
+     def test_request(self):
          req = make_request()
-         req.headers[middleware.AUTH_TOKEN_HEADER] = CONF.admin_token
+         req.headers[middleware.AUTH_TOKEN_HEADER] = 'MAGIC'
 diff --git a/keystone/tests/unit/test_v2.py b/keystone/tests/unit/test_v2.py
-index 1c1b91f..74d760b 100644
+index acdfca5..08b789a 100644
 --- a/keystone/tests/unit/test_v2.py
 +++ b/keystone/tests/unit/test_v2.py
-@@ -1415,6 +1415,7 @@ class TestFernetTokenProviderV2(RestfulTestCase):
-         self.config_fixture.config(
-             group='token',
-             provider='keystone.token.providers.fernet.Provider')
+@@ -1416,6 +1416,7 @@ class TestFernetTokenProviderV2(RestfulTestCase):
+     def config_overrides(self):
+         super(TestFernetTokenProviderV2, self).config_overrides()
+         self.config_fixture.config(group='token', provider='fernet')
 +        self.config_fixture.config(admin_token='ADMIN')
  
      def test_authenticate_unscoped_token(self):
          unscoped_token = self.get_unscoped_token()
 diff --git a/keystone/tests/unit/test_v3.py b/keystone/tests/unit/test_v3.py
-index f6d6ed9..1af2a84 100644
+index 32c5e29..1f77869 100644
 --- a/keystone/tests/unit/test_v3.py
 +++ b/keystone/tests/unit/test_v3.py
-@@ -1218,6 +1218,10 @@ class VersionTestCase(RestfulTestCase):
+@@ -1185,6 +1185,10 @@ class VersionTestCase(RestfulTestCase):
  # NOTE(gyee): test AuthContextMiddleware here instead of test_middleware.py
  # because we need the token
  class AuthContextMiddlewareTestCase(RestfulTestCase):
@@ -109,48 +109,46 @@ index f6d6ed9..1af2a84 100644
  
          class fake_req(object):
 diff --git a/keystone/tests/unit/test_v3_auth.py b/keystone/tests/unit/test_v3_auth.py
-index ec07917..e63dcab 100644
+index d53a85d..2007899 100644
 --- a/keystone/tests/unit/test_v3_auth.py
 +++ b/keystone/tests/unit/test_v3_auth.py
-@@ -114,7 +114,11 @@ class TestAuthInfo(test_v3.AuthTestMixin, testcase.TestCase):
+@@ -115,6 +115,10 @@ class TestAuthInfo(test_v3.AuthTestMixin, testcase.TestCase):
  
  
  class TokenAPITests(object):
--    # Why is this not just setUP? Because TokenAPITests is not a test class
 +    def config_overrides(self):
 +        super(TokenAPITests, self).config_overrides()
 +        self.config_fixture.config(admin_token='ADMIN')
 +
-+    # Why is this not just setUP? Because TokenAPITest is not a test class
+     # Why is this not just setUp? Because TokenAPITests is not a test class
      # itself. If TokenAPITests became a subclass of the testcase, it would get
      # called by the enumerate-tests-in-file code. The way the functions get
-     # resolved in Python for multiple inheritance means that a setUp in this
-@@ -488,6 +492,7 @@ class TestPKITokenAPIs(test_v3.RestfulTestCase, TokenAPITests):
-         self.config_fixture.config(
-             group='token',
-             provider='keystone.token.providers.pki.Provider')
+@@ -506,6 +510,7 @@ class TestPKITokenAPIs(test_v3.RestfulTestCase, TokenAPITests):
+     def config_overrides(self):
+         super(TestPKITokenAPIs, self).config_overrides()
+         self.config_fixture.config(group='token', provider='pki')
 +        self.config_fixture.config(admin_token='ADMIN')
  
      def setUp(self):
          super(TestPKITokenAPIs, self).setUp()
-@@ -504,6 +509,7 @@ class TestPKIZTokenAPIs(test_v3.RestfulTestCase, TokenAPITests):
-         self.config_fixture.config(
-             group='token',
-             provider='keystone.token.providers.pkiz.Provider')
+@@ -567,6 +572,7 @@ class TestPKIZTokenAPIs(TestPKITokenAPIs):
+     def config_overrides(self):
+         super(TestPKIZTokenAPIs, self).config_overrides()
+         self.config_fixture.config(group='token', provider='pkiz')
 +        self.config_fixture.config(admin_token='ADMIN')
  
-     def setUp(self):
-         super(TestPKIZTokenAPIs, self).setUp()
-@@ -516,6 +522,7 @@ class TestUUIDTokenAPIs(test_v3.RestfulTestCase, TokenAPITests):
-         self.config_fixture.config(
-             group='token',
-             provider='keystone.token.providers.uuid.Provider')
+     def verify_token(self, *args, **kwargs):
+         return cms.pkiz_verify(*args, **kwargs)
+@@ -576,6 +582,7 @@ class TestUUIDTokenAPIs(test_v3.RestfulTestCase, TokenAPITests):
+     def config_overrides(self):
+         super(TestUUIDTokenAPIs, self).config_overrides()
+         self.config_fixture.config(group='token', provider='uuid')
 +        self.config_fixture.config(admin_token='ADMIN')
  
      def setUp(self):
          super(TestUUIDTokenAPIs, self).setUp()
-@@ -3075,6 +3082,7 @@ class TestTrustAuth(test_v3.RestfulTestCase):
-             provider='keystone.token.providers.pki.Provider',
+@@ -3180,6 +3187,7 @@ class TestTrustAuth(test_v3.RestfulTestCase):
+             provider='pki',
              revoke_by_id=False)
          self.config_fixture.config(group='trust', enabled=True)
 +        self.config_fixture.config(admin_token='ADMIN')
@@ -158,5 +156,5 @@ index ec07917..e63dcab 100644
      def setUp(self):
          super(TestTrustAuth, self).setUp()
 -- 
-2.1.0
+2.4.3
 

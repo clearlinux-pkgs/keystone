@@ -1,6 +1,6 @@
-From b663b791f05887bfe43d0befb593b71a76562091 Mon Sep 17 00:00:00 2001
-From: Victor Morales <victor.morales@intel.com>
-Date: Thu, 10 Sep 2015 18:57:38 -0500
+From 0708992d1541e115375c23b11f06e29b4143f991 Mon Sep 17 00:00:00 2001
+From: "Simental Magana, Marcos" <marcos.simental.magana@intel.com>
+Date: Mon, 28 Sep 2015 17:25:56 -0500
 Subject: [PATCH] default config
 
 ---
@@ -8,10 +8,10 @@ Subject: [PATCH] default config
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/etc/keystone.conf.sample b/etc/keystone.conf.sample
-index 1c2298b..9ea8001 100644
+index a9156dd..08ec2d4 100644
 --- a/etc/keystone.conf.sample
 +++ b/etc/keystone.conf.sample
-@@ -308,7 +308,7 @@
+@@ -326,7 +326,7 @@
  # (keystone.cache.memcache_pool) or Redis (dogpile.cache.redis) be used in
  # production deployments.  Small workloads (single process) like devstack can
  # use the dogpile.cache.memory backend. (string value)
@@ -20,15 +20,15 @@ index 1c2298b..9ea8001 100644
  
  # Arguments supplied to the backend module. Specify this option once per
  # argument to be passed to the dogpile.cache backend. Example format:
-@@ -1684,7 +1684,7 @@
- #provider = keystone.token.providers.uuid.Provider
- 
- # Token persistence backend driver. (string value)
--#driver = keystone.token.persistence.backends.sql.Token
-+driver = keystone.token.persistence.backends.memcache.Token
+@@ -1905,7 +1905,7 @@
+ # Entrypoint for the token persistence backend driver in the
+ # keystone.token.persistence namespace. Supplied drivers are kvs, memcache,
+ # memcache_pool, and sql. (string value)
+-#driver = sql
++driver = memcache
  
  # Toggle for token system caching. This has no effect unless global caching is
  # enabled. (boolean value)
 -- 
-2.1.0
+2.4.3
 
