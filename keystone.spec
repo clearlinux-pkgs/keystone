@@ -48,6 +48,7 @@ BuildRequires : eventlet
 BuildRequires : extras
 BuildRequires : fixtures
 BuildRequires : flake8-python
+BuildRequires : funcsigs-python
 BuildRequires : futures
 BuildRequires : greenlet
 BuildRequires : hacking
@@ -130,6 +131,7 @@ BuildRequires : trollius
 BuildRequires : unittest2
 BuildRequires : virtualenv
 BuildRequires : waitress-python
+BuildRequires : wrapt-python
 BuildRequires : zope.interface
 Patch1: 0001-default-config.patch
 Patch2: 0002-Default-Keystone-HTTPD-configuration.patch
@@ -170,6 +172,8 @@ data components for the keystone package.
 %package python
 Summary: python components for the keystone package.
 Group: Default
+Requires: jsonschema-python
+Requires: pycadf-python
 
 %description python
 python components for the keystone package.
@@ -214,6 +218,8 @@ install -m 0755 -d %{buildroot}/usr/share/defaults/httpd/conf.d
 install -p -D -m 644 httpd/wsgi-keystone.conf  %{buildroot}/usr/share/defaults/httpd/conf.d
 ## make_install_append end
 
+%post data
+chown -R httpd:httpd /usr/share/httpd/cgi-bin/keystone/
 %files
 %defattr(-,root,root,-)
 
