@@ -109,3 +109,5 @@ ipaddress
 idna
 osprofiler
 keystone-data
+wrapt-python
+funcsigs-python
