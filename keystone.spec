@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 2015.1.1
-Release  : 64
+Release  : 65
 URL      : http://tarballs.openstack.org/keystone/keystone-2015.1.1.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-2015.1.1.tar.gz
 Source1  : keystone.tmpfiles
@@ -138,6 +138,7 @@ Patch2: 0002-Default-Keystone-HTTPD-configuration.patch
 Patch3: 0003-Integrate-OSprofiler-in-Keystone.patch
 Patch4: 0004-disable-admin_token-by-default.patch
 Patch5: 0005-Logging-patch.patch
+Patch6: uwsgi-configs.patch
 
 %description
 Documentation how to set up Keystone to run with Apache HTTPD is in
@@ -186,6 +187,7 @@ python components for the keystone package.
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
 
 %build
 python2 setup.py build -b py2
@@ -216,6 +218,9 @@ cp  %{buildroot}/usr/share/httpd/cgi-bin/keystone/keystone.py %{buildroot}/usr/s
 cp  %{buildroot}/usr/share/httpd/cgi-bin/keystone/keystone.py %{buildroot}/usr/share/httpd/cgi-bin/keystone/admin
 install -m 0755 -d %{buildroot}/usr/share/defaults/httpd/conf.d
 install -p -D -m 644 httpd/wsgi-keystone.conf  %{buildroot}/usr/share/defaults/httpd/conf.d
+install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
+install -p -D -m 644 httpd/main.ini  %{buildroot}/usr/share/uwsgi/keystone
+install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone
 ## make_install_append end
 
 %post data
@@ -248,6 +253,8 @@ chown -R httpd:httpd /usr/share/httpd/cgi-bin/keystone/
 /usr/share/httpd/cgi-bin/keystone/main
 /usr/share/keystone/sample_data.sh
 /usr/share/keystone/wsgi-keystone.conf
+/usr/share/uwsgi/keystone/admin.ini
+/usr/share/uwsgi/keystone/main.ini
 
 %files python
 %defattr(-,root,root,-)

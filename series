@@ -3,3 +3,4 @@
 0003-Integrate-OSprofiler-in-Keystone.patch
 0004-disable-admin_token-by-default.patch
 0005-Logging-patch.patch
+uwsgi-configs.patch

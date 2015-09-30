@@ -13,3 +13,6 @@ cp  %{buildroot}/usr/share/httpd/cgi-bin/keystone/keystone.py %{buildroot}/usr/s
 cp  %{buildroot}/usr/share/httpd/cgi-bin/keystone/keystone.py %{buildroot}/usr/share/httpd/cgi-bin/keystone/admin
 install -m 0755 -d %{buildroot}/usr/share/defaults/httpd/conf.d
 install -p -D -m 644 httpd/wsgi-keystone.conf  %{buildroot}/usr/share/defaults/httpd/conf.d
+install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
+install -p -D -m 644 httpd/main.ini  %{buildroot}/usr/share/uwsgi/keystone
+install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone

@@ -1,0 +1,28 @@
+Index: keystone-2015.1.1/httpd/admin.ini
+===================================================================
+--- /dev/null
++++ keystone-2015.1.1/httpd/admin.ini
+@@ -0,0 +1,9 @@
++[uwsgi]
++chdir = /usr/share/httpd/cgi-bin
++wsgi-file = keystone/admin
++uid = keystone
++gid = keystone
++http = :35357
++processes = 5
++threads = 1
++master = true
+Index: keystone-2015.1.1/httpd/main.ini
+===================================================================
+--- /dev/null
++++ keystone-2015.1.1/httpd/main.ini
+@@ -0,0 +1,9 @@
++[uwsgi]
++chdir = /usr/share/httpd/cgi-bin
++wsgi-file = keystone/main
++uid = keystone
++gid = keystone
++http = :5000
++processes = 5
++threads = 1
++master = true
