@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 8.0.0.0rc1
-Release  : 67
+Release  : 68
 URL      : http://tarballs.openstack.org/keystone/keystone-8.0.0.0rc1.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-8.0.0.0rc1.tar.gz
 Source1  : keystone.tmpfiles
@@ -226,6 +226,8 @@ install -p -D -m 644 httpd/wsgi-keystone.conf  %{buildroot}/usr/share/defaults/h
 install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/main.ini  %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone
+install -m 0755 -d %{buildroot}/usr/share/nginx/conf.d
+install -p -D -m 644 httpd/keystone.conf %{buildroot}/usr/share/nginx/conf.d
 ## make_install_append end
 
 %post data
@@ -260,6 +262,7 @@ chown -R httpd:httpd /usr/share/httpd/cgi-bin/keystone/
 /usr/share/httpd/cgi-bin/keystone/main
 /usr/share/keystone/sample_data.sh
 /usr/share/keystone/wsgi-keystone.conf
+/usr/share/nginx/conf.d/keystone.conf
 /usr/share/uwsgi/keystone/admin.ini
 /usr/share/uwsgi/keystone/main.ini
 
