@@ -110,4 +110,5 @@ idna
 osprofiler
 keystone-data
 wrapt-python
+python-editor
 funcsigs-python
