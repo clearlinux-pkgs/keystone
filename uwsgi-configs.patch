@@ -4,25 +4,50 @@ Index: keystone-2015.1.1/httpd/admin.ini
 +++ keystone-2015.1.1/httpd/admin.ini
 @@ -0,0 +1,9 @@
 +[uwsgi]
++master = true
++processes = 5
++threads = 1
++protocol = uwsgi
 +chdir = /usr/share/httpd/cgi-bin
 +wsgi-file = keystone/admin
 +uid = keystone
 +gid = keystone
-+http = :35357
-+processes = 5
-+threads = 1
-+master = true
 Index: keystone-2015.1.1/httpd/main.ini
 ===================================================================
 --- /dev/null
 +++ keystone-2015.1.1/httpd/main.ini
 @@ -0,0 +1,9 @@
 +[uwsgi]
++master = true
++processes = 5
++threads = 1
++protocol = uwsgi
 +chdir = /usr/share/httpd/cgi-bin
 +wsgi-file = keystone/main
 +uid = keystone
 +gid = keystone
-+http = :5000
-+processes = 5
-+threads = 1
-+master = true
+Index: keystone-2015.1.1/httpd/keystone.conf
+===================================================================
+--- /dev/null
++++ keystone-2015.1.1/httpd/keystone.conf
+@@ -0,0 +1,19 @@
++server {
++       listen 35357;
++       server_name localhost;
++       location / {
++       		include uwsgi_params;
++       		uwsgi_pass unix:/run/uwsgi/keystone/admin.sock;
++       		uwsgi_param SCRIPT_NAME '';
++       }
++}
++
++server {
++       listen 5000;
++       server_name localhost;
++       location / {
++       		include uwsgi_params;
++		uwsgi_pass unix:/run/uwsgi/keystone/main.sock;
++		uwsgi_param SCRIPT_NAME '';
++       }
++}
+\ No newline at end of file
