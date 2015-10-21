@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 8.0.0
-Release  : 70
+Release  : 71
 URL      : http://tarballs.openstack.org/keystone/keystone-8.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-8.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -134,11 +134,10 @@ BuildRequires : virtualenv
 BuildRequires : waitress-python
 BuildRequires : wrapt-python
 BuildRequires : zope.interface
-Patch1: 0001-default-config.patch
-Patch2: 0002-Default-Keystone-HTTPD-configuration.patch
-Patch3: 0003-Integrate-OSprofiler-in-Keystone.patch
-Patch4: 0004-disable-admin_token-by-default.patch
-Patch5: uwsgi-configs.patch
+Patch1: 0002-Default-Keystone-HTTPD-configuration.patch
+Patch2: 0003-Integrate-OSprofiler-in-Keystone.patch
+Patch3: 0004-disable-admin_token-by-default.patch
+Patch4: uwsgi-configs.patch
 
 %description
 This is a database migration repository.
@@ -192,7 +191,6 @@ python components for the keystone package.
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%patch5 -p1
 
 %build
 python2 setup.py build -b py2
