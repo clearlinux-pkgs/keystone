@@ -1,4 +1,4 @@
-0001-default-config.patch
+#0001-default-config.patch  vjmorale: There are some issues with python-memcache https://bugs.launchpad.net/keystone/+bug/1462152/comments/6
 0002-Default-Keystone-HTTPD-configuration.patch
 0003-Integrate-OSprofiler-in-Keystone.patch
 0004-disable-admin_token-by-default.patch
