@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 8.0.0
-Release  : 71
+Release  : 72
 URL      : http://tarballs.openstack.org/keystone/keystone-8.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-8.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -210,19 +210,14 @@ install -d -m 755 %{buildroot}/usr/share/defaults/keystone
 install -p -D -m 644 etc/*.templates %{buildroot}/usr/share/defaults/keystone
 install -p -D -m 644 etc/*.ini %{buildroot}/usr/share/defaults/keystone
 install -p -D -m 644 etc/*.sample %{buildroot}/usr/share/defaults/keystone
-install -p -D -m 644 etc/*.conf.sample %{buildroot}/usr/share/defaults/keystone
 install -p -D -m 644 etc/*.json %{buildroot}/usr/share/defaults/keystone
 install -p -D -m 755 tools/sample_data.sh %{buildroot}%{_datadir}/keystone/sample_data.sh
 install -p -D -m 644 httpd/wsgi-keystone.conf %{buildroot}%{_datadir}/keystone/
 for i in %{buildroot}/usr/share/defaults/keystone/*.sample; do mv $i ${i%.*}; done;
-install -m 0755 -d %{buildroot}/usr/share/httpd/cgi-bin/keystone
-install -p -D -m 644 httpd/keystone.py %{buildroot}/usr/share/httpd/cgi-bin/keystone/
-cp  %{buildroot}/usr/share/httpd/cgi-bin/keystone/keystone.py %{buildroot}/usr/share/httpd/cgi-bin/keystone/main
-cp  %{buildroot}/usr/share/httpd/cgi-bin/keystone/keystone.py %{buildroot}/usr/share/httpd/cgi-bin/keystone/admin
 install -m 0755 -d %{buildroot}/usr/share/defaults/httpd/conf.d
 install -p -D -m 644 httpd/wsgi-keystone.conf  %{buildroot}/usr/share/defaults/httpd/conf.d
 install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
-install -p -D -m 644 httpd/main.ini  %{buildroot}/usr/share/uwsgi/keystone
+install -p -D -m 644 httpd/public.ini  %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone
 install -m 0755 -d %{buildroot}/usr/share/nginx/conf.d
 install -p -D -m 644 httpd/keystone.conf %{buildroot}/usr/share/nginx/conf.d
@@ -253,16 +248,11 @@ chown -R httpd:httpd /usr/share/httpd/cgi-bin/keystone/
 /usr/share/defaults/keystone/logging.conf
 /usr/share/defaults/keystone/policy.json
 /usr/share/defaults/keystone/policy.v3cloudsample.json
-/usr/share/httpd/cgi-bin/keystone/admin
-/usr/share/httpd/cgi-bin/keystone/keystone.py
-/usr/share/httpd/cgi-bin/keystone/keystone.pyc
-/usr/share/httpd/cgi-bin/keystone/keystone.pyo
-/usr/share/httpd/cgi-bin/keystone/main
 /usr/share/keystone/sample_data.sh
 /usr/share/keystone/wsgi-keystone.conf
 /usr/share/nginx/conf.d/keystone.conf
 /usr/share/uwsgi/keystone/admin.ini
-/usr/share/uwsgi/keystone/main.ini
+/usr/share/uwsgi/keystone/public.ini
 
 %files python
 %defattr(-,root,root,-)
