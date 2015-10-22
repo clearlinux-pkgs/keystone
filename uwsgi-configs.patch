@@ -1,35 +1,37 @@
-Index: keystone-2015.1.1/httpd/admin.ini
-===================================================================
+From 480be2939ff788a22262f0e5a7b9bb872e9c1d98 Mon Sep 17 00:00:00 2001
+From: Alberto Murillo <alberto.murillo.silva@intel.com>
+Date: Thu, 22 Oct 2015 14:05:47 -0500
+Subject: [PATCH] Serve keystone via nginx with uwsgi.
+
+---
+ httpd/admin.ini     |  9 +++++++++
+ httpd/keystone.conf | 19 +++++++++++++++++++
+ httpd/public.ini    |  9 +++++++++
+ 3 files changed, 37 insertions(+)
+ create mode 100644 httpd/admin.ini
+ create mode 100644 httpd/keystone.conf
+ create mode 100644 httpd/public.ini
+
+diff --git a/httpd/admin.ini b/httpd/admin.ini
+new file mode 100644
+index 0000000..7e3e37e
 --- /dev/null
-+++ keystone-2015.1.1/httpd/admin.ini
++++ b/httpd/admin.ini
 @@ -0,0 +1,9 @@
 +[uwsgi]
 +master = true
 +processes = 5
 +threads = 1
 +protocol = uwsgi
-+chdir = /usr/share/httpd/cgi-bin
-+wsgi-file = keystone/admin
++chdir = /usr/bin
++wsgi-file = keystone-wsgi-admin
 +uid = keystone
 +gid = keystone
-Index: keystone-2015.1.1/httpd/main.ini
-===================================================================
+diff --git a/httpd/keystone.conf b/httpd/keystone.conf
+new file mode 100644
+index 0000000..cc91ab5
 --- /dev/null
-+++ keystone-2015.1.1/httpd/main.ini
-@@ -0,0 +1,9 @@
-+[uwsgi]
-+master = true
-+processes = 5
-+threads = 1
-+protocol = uwsgi
-+chdir = /usr/share/httpd/cgi-bin
-+wsgi-file = keystone/main
-+uid = keystone
-+gid = keystone
-Index: keystone-2015.1.1/httpd/keystone.conf
-===================================================================
---- /dev/null
-+++ keystone-2015.1.1/httpd/keystone.conf
++++ b/httpd/keystone.conf
 @@ -0,0 +1,19 @@
 +server {
 +       listen 35357;
@@ -46,8 +48,25 @@ Index: keystone-2015.1.1/httpd/keystone.conf
 +       server_name localhost;
 +       location / {
 +       		include uwsgi_params;
-+		uwsgi_pass unix:/run/uwsgi/keystone/main.sock;
++		uwsgi_pass unix:/run/uwsgi/keystone/public.sock;
 +		uwsgi_param SCRIPT_NAME '';
 +       }
 +}
-\ No newline at end of file
+diff --git a/httpd/public.ini b/httpd/public.ini
+new file mode 100644
+index 0000000..d34ccd3
+--- /dev/null
++++ b/httpd/public.ini
+@@ -0,0 +1,9 @@
++[uwsgi]
++master = true
++processes = 5
++threads = 1
++protocol = uwsgi
++chdir = /usr/bin
++wsgi-file = keystone-wsgi-public
++uid = keystone
++gid = keystone
+-- 
+2.1.0
+
