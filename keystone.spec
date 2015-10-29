@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 8.0.0
-Release  : 73
+Release  : 74
 URL      : http://tarballs.openstack.org/keystone/keystone-8.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-8.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -223,8 +223,6 @@ install -m 0755 -d %{buildroot}/usr/share/nginx/conf.d
 install -p -D -m 644 httpd/keystone.conf %{buildroot}/usr/share/nginx/conf.d
 ## make_install_append end
 
-%post data
-chown -R httpd:httpd /usr/share/httpd/cgi-bin/keystone/
 %files
 %defattr(-,root,root,-)
 
