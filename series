@@ -2,4 +2,4 @@
 0002-Default-Keystone-HTTPD-configuration.patch
 0003-Integrate-OSprofiler-in-Keystone.patch
 0004-disable-admin_token-by-default.patch
-uwsgi-configs.patch
+0005-Serve-keystone-via-nginx-with-uwsgi.patch
