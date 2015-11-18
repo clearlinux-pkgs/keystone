@@ -1,31 +1,30 @@
-From f431043d781e2008cebc6503823adfbd5140eb51 Mon Sep 17 00:00:00 2001
-From: Alberto Murillo <alberto.murillo.silva@intel.com>
-Date: Thu, 22 Oct 2015 14:05:47 -0500
-Subject: [PATCH] Serve keystone via nginx with uwsgi.
+From 91bccf5e62f9249e7026605681138b1118d48c9f Mon Sep 17 00:00:00 2001
+From: "Munoz, Obed N" <obed.n.munoz@intel.com>
+Date: Wed, 18 Nov 2015 17:45:49 -0600
+Subject: [PATCH] Serve keystone via nginx with uwsgi
 
-Signed-off-by: Victor Morales <victor.morales@intel.com>
+Signed-off-by: Munoz, Obed N <obed.n.munoz@intel.com>
 ---
- httpd/admin.ini     | 10 ++++++++++
+ httpd/admin.ini     |  9 +++++++++
  httpd/keystone.conf | 19 +++++++++++++++++++
- httpd/public.ini    | 10 ++++++++++
- 3 files changed, 39 insertions(+)
+ httpd/public.ini    |  9 +++++++++
+ 3 files changed, 37 insertions(+)
  create mode 100644 httpd/admin.ini
  create mode 100644 httpd/keystone.conf
  create mode 100644 httpd/public.ini
 
 diff --git a/httpd/admin.ini b/httpd/admin.ini
 new file mode 100644
-index 0000000..211f589
+index 0000000..7e3e37e
 --- /dev/null
 +++ b/httpd/admin.ini
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,9 @@
 +[uwsgi]
 +master = true
 +processes = 5
 +threads = 1
 +protocol = uwsgi
 +chdir = /usr/bin
-+logto = /var/log/uwsgi/keystone-admin.log
 +wsgi-file = keystone-wsgi-admin
 +uid = keystone
 +gid = keystone
@@ -56,20 +55,19 @@ index 0000000..ad7aca3
 +}
 diff --git a/httpd/public.ini b/httpd/public.ini
 new file mode 100644
-index 0000000..3f7fc95
+index 0000000..d34ccd3
 --- /dev/null
 +++ b/httpd/public.ini
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,9 @@
 +[uwsgi]
 +master = true
 +processes = 5
 +threads = 1
 +protocol = uwsgi
 +chdir = /usr/bin
-+logto = /var/log/nginx/keystone.log
 +wsgi-file = keystone-wsgi-public
 +uid = keystone
 +gid = keystone
 -- 
-2.1.0
+2.6.2
 
