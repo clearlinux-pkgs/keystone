@@ -57,7 +57,7 @@ index 70db382..b6baaad 100644
 +[filter:osprofiler]
 +paste.filter_factory = osprofiler.web:WsgiMiddleware.factory
 +hmac_keys = SECRET_KEY
-+enabled = yes 
++enabled = yes
 diff --git a/keystone/common/config.py b/keystone/common/config.py
 index 107fbbf..e5d3538 100644
 --- a/keystone/common/config.py
