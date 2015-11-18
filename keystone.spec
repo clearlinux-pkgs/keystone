@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 8.0.0
-Release  : 74
+Release  : 75
 URL      : http://tarballs.openstack.org/keystone/keystone-8.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-8.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -137,7 +137,7 @@ BuildRequires : zope.interface
 Patch1: 0002-Default-Keystone-HTTPD-configuration.patch
 Patch2: 0003-Integrate-OSprofiler-in-Keystone.patch
 Patch3: 0004-disable-admin_token-by-default.patch
-Patch4: uwsgi-configs.patch
+Patch4: 0005-Serve-keystone-via-nginx-with-uwsgi.patch
 
 %description
 This is a database migration repository.
