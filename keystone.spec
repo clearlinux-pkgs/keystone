@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 8.0.1
-Release  : 78
+Release  : 79
 URL      : http://tarballs.openstack.org/keystone/keystone-8.0.1.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-8.0.1.tar.gz
 Source1  : keystone.tmpfiles
