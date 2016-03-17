@@ -1,6 +1,30 @@
 CHANGES
 =======
 
+8.1.0
+-----
+
+* Make WebSSO trusted_dashboard hostname case-insensitive
+* Imported Translations from Zanata
+* Escape DN in enabled query
+* Test enabled emulation with special user_tree_dn
+* Revert "Validate domain ownership for v2 tokens"
+* Fix schema validation to use JSONSchema for empty entity
+* Refactors validation tests to better see the cases
+* Fix trust redelegation and associated test
+* use self.skipTest instead of self.skip
+* Imported Translations from Zanata
+* Fix users in group and groups for user exact filters
+* Add audit IDs to revocation events
+* Expose defect in users_in_group, groups_for_user exact filters
+* Ensure endpoints returned is filtered correctly
+* Fix 500 error when no fernet token is passed
+* Updated from global requirements
+* Updated from global requirements
+* Updated from global requirements
+* More useful message when using direct driver import
+* force releasenotes warnings to be treated as errors
+
 8.0.1
 -----
 
