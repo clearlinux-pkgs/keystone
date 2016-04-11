@@ -1,58 +1,705 @@
 CHANGES
 =======
 
-8.1.0
+9.0.0
 -----
 
-* Make WebSSO trusted_dashboard hostname case-insensitive
+* Update federated user display name with shadow_users_api
+
+9.0.0.0rc2
+----------
+
+* Correct `role_name` constraint dropping
 * Imported Translations from Zanata
-* Escape DN in enabled query
-* Test enabled emulation with special user_tree_dn
-* Revert "Validate domain ownership for v2 tokens"
+* Imported Translations from Zanata
+* Fix keystone-manage config file path
+* Correct test to support changing N release name
+* Imported Translations from Zanata
+* Imported Translations from Zanata
+* Imported Translations from Zanata
+* Imported Translations from Zanata
+* Imported Translations from Zanata
+* Add release note for list_limit support
+* Imported Translations from Zanata
+* Update .gitreview for stable/mitaka
+
+9.0.0.0rc1
+----------
+
+* Support `id` and `enabled` attributes when listing service providers
+* Check for already present user without inserting in Bootstrap
+* Mapping which yield no identities should result in ValidationError
+* Make backend filter testing more comprehensive
+* Change xrange to range for python3 compatibility
+* Remove reference to keystoneclient CLI
+* Document running in uwsgi proxied by apache
+* Updating sample configuration file
+* Imported Translations from Zanata
+* Correct Hints class filter documentation
+* Release note cleanup
+* Update reported version for Mitaka
+* Add docs for additional bootstrap endpoint parameters
+* Remove unused notification method and class
+* Consolidate @notifications.internal into Audit
+* Imported Translations from Zanata
+* Remove some translations
+* Imported Translations from Zanata
+* Fixed user in group participance
+* register the config generator default hook with the right name
+* Imported Translations from Zanata
+* Rename v2 token schema used for validation
+* Migrate_repo init version helper
+* Remove TestFernetTokenProvider
+* Refactor TestFernetTokenProvider trust-scoped tests
+* Refactor TestFernetTokenProvider project-scoped tests
+* Refactor TestFernetTokenProvider domain-scoped tests
+* Refactor TestFernetTokenProvider unscoped token tests
+* Fixing mapping schema to allow local user
+* Fix keystone-manage example command path
+* Add auto-increment int primary key to revoke.backends.sql
+* Add PKIZ coverage to trust tests
+* Consolidate TestTrustRedelegation and TestTrustAuth tests
+* Split out domain config driver and manager tests
+* Add notifications to user/group membership
+* Add ability to send notifications for actors
+* Updated from global requirements
+* Remove foreign assignments when deleting a domain
+* Correct create_project driver versioning
+* Explicitly exclude tests from bandit scan
+* Move role backend tests
+* v2 tokens validated on the v3 API are missing timezones
+* Move domain config backend tests
+* Validate v2 fernet token returns extra attributes
+* Clarify virtualenv setup in developer docs
+* Fixes a few LDAP tests to actually run
+* Imported Translations from Zanata
+* Un-wrap function
+* Fix warning when running tox
+* Race condition in keystone domain config
+* Adding 'domain_id' filter to list_user_projects()
+* Add identity endpoint creation to bootstrap
+* Updated from global requirements
+* Remove _disable_domain from the resource API
+* Remove _disable_project from the resource API
+* Remove the notification.disabled decorator
+* Remove unused notification decorators
+* Cleanup from from split of token backend tests
+* Split identity backend tests
+* Split policy backend tests
+* Split catalog backend tests
+* Split trust backend tests
+* Split token backend tests
+* Split resource backend tests
+* Split assignment backend tests
+* Updated from global requirements
+* Consolidate configuration default overrides
+* Updating sample configuration file
+* IPV6 test unblacklist
+* Fix trust chain tests
+
+9.0.0.0b3
+---------
+
+* Minor edits to the developing doc
+* Add release notes for projects acting as domains
+* Fix keystone.common.wsgi to explicitly use bytes
+* fix sample config link that 404s
+* add hints to list_services for templated backend
+* Fixes hacking for Py3 tests
+* Fixes to get cert tests running in Py3
+* Fixes the templated backend tests for Python3
+* remove pyc files before running tests
+* Stop using oslotest.BaseTestCase
+* Return 404 instead of 401 for tokens w/o roles
+* Remove unused domain driver method in legacy wrapper
+* Deprecate domain driver interface methods
+* Fix the migration issue for the user doesn't have a password
+* Add driver details in architecture doc
+* Shadow users - Shadow federated users
+* Projects acting as domains
+* Update developer docs for ubuntu 15.10
+* Moved CORS middleware configuration into oslo-config-generator
+* V2 operations create default domain on demand
+* Make keystone tests work on leap years
+* Updating sample configuration file
+* Fix doc build warnings
+* Enable LDAP connection pooling by default
+* Delay using threading.local() to fix check job failure
+* Minor edits to the installation doc
+* Minor edits to the configuration doc
+* Minor community doc edits
+* Updated from global requirements
+* Followup for LDAP removal
+* Remove get_session and get_engine
+* No more legacy engine facade in tests
+* Use requst local in-process cache per request
+* Move admin_token_auth before build_auth_context in sample paste.ini
+* Update default domain's description
+* Reference config values at runtime
+* Use the new enginefacade from oslo.db
+* Updated from global requirements
+* Fix incorrect assumption when deleting assignments
+* Remove migration_helpers.get_default_domain
+* db_sync doesn't create default domain
+* Implied roles index with cascading delete
+* Fix project-related forbidden response messages
+* Fixes a bug when setting a user's password to null
+* Renamed TOTP passcode generation function
+* Updates TOTP release note
+* Simplify use of secure_proxy_ssl_header
+* Shadow users - Separate user identities
+* Switch to configless bandit
+* Parameter to return audit ids only in revocation list
+* Add tests for fetching the revocation list
+* Updating sample configuration file
+* Deprecate logger.WritableLogger
+* Removing H405 violations from keystone
+* Updated from global requirements
+* Updated from global requirements
+* Updating sample configuration file
+* Remove useless {} from __table_args__
+* Time-based One-time Password
+* Fix inconsistencies between Oauth1DriverV8 interface and driver
+* Oauth1 manager sets consumer secret
+* Remove setting class variable
+* Allow user list without specifying domain
+* Adds user_description_attribute mapping support to the LDAP backend
+* encode user id for notifications
+* Add back a bandit tox job
+* Enable support for posixGroups in LDAP
+* Add is_domain filter to v3 list_projects
+* Add tests in preparation of projects acting as a domain
+* Avoid using `len(x)` to check if x is empty
+* Use the driver to get limits
+* Fallback to list_limit from default config
+* Add list_limit to the white list for configs in db
+* Updating sample configuration file
+* handle unicode names for federated users
+* Verify project unique constraints for projects acting as domains
+* wsgi: fix base_url finding
+* Disable Admin tokens set to None
+* Modify rules for domain specific role assignments
+* Modify implied roles to honor domain specific roles
+* Modify rules in the v3 policy sample for domain specifc roles
+* Re-enable and undeprecate admin_token_auth
+* Don't describe trusts as an extension in configuration doc
+* Tidy up configuration documentation for inherited assignments
+* Clean up configuration documentataion on v2 user CRUD
+* Allow project domain_id to be nullable at the manager level
+* Trivial: Cleanup unused conf variables
+* Updating sample configuration file
+* Updating sample configuration file
+* Fixes parameter in duplicate project name creation
+* Fix terms from patch 275706
+* sensible default for secure_proxy_ssl_header
+* Restricting domain_id update
+* Allow project_id in catalog substitutions
+* Avoid `None` as a redundant argument to dict.get()
+* Avoid "non-Pythonic" method names
+* Manager support for project cascade update
+* Updating sample configuration file
+* Expand implied roles in trust tokens
+* add a test that uses trusts and implies roles
+* Updating sample configuration file
+* Convert assignment.root_role config option to list of strings
+* Avoid wrong deletion of domain assignments
+* Manager support for project cascade delete
+* AuthContextMiddleware admin token handling
+* Deprecate admin_token_auth
+* Adds better logging to the domain config finder
+* Extracts logic for finding domain configs
+* Fix nits from domain specific roles CRUD support
+* Change get_project permission
+* Updated from global requirements
+* Enables token_data_helper tests for Python3
+* Stop using nose as a Python3 test runner
+* Fix release note of removal of v2.0 trusts support
+* Remove PostParams middleware
+* Updated from global requirements
+* Moves policy setup into a fixture
+* Make pep8 *the* linting interface
+* Added tokenless auth headers to CORS middleware
+* Add backend support for deleting a projects list
+* Make fernet work with oauth1 authentication
+* Consolidate the fernet provider validate_v2_token()
+* Remove support for trusts in v2.0
+* Add CRUD support for domain specific roles
+* Added CORS support to Keystone
+* Deprecate Saml2 auth plugin
+* Uses open context manager for templated catalogs
+* Disable the ipv6 tests in py34
+* Missing 'region' in service and 'name' in endpoint for EndpointFilterCatalog
+* Small typos on the ldap.url config option help
+* Replace exit() with sys.exit()
+* include sample config file in docs
+* Fixes a language issue in a release note
+* Imported Translations from Zanata
+* Updated from global requirements
+* Support multiple URLs for LDAP server
+* Set deprecated_reason on deprecated config options
+* Move user and admin crud to core
+* squash migrations - kilo
+* Adds validation negative unit tests
+* Use oslo.log specified method to set log levels
+* Add RENO update for simple_cert_extension deprecation
+* Opt-out certain Keystone Notifications
+* Update the home page
+* Release notes for implied roles
+* deprecate pki_setup from keystone-manage
+* test_credential.py work with python34
+* Consolidate `test_contrib_ec2.py` into `test_credential.py`
+* Reinitialize the policy engine where it is needed
+* Provide an error message if downgrading schema
+* Updated from global requirements
+* Consolidate the fernet provider issue_v2_token()
+* Consolidate the fernet provider validate_v3_token()
+* Add tests for role management with v3policy file
+* Fix some word spellings
+* Make WebSSO trusted_dashboard hostname case-insensitive
+* Deprecate simple_cert extension
+* Do not assign admin to service users
+* Add in TRACE logging for the manager
+* Add schema for OAuth1 consumer API
+* Correct docstrings
+* Remove un-used test code
+* Raise more precise exception on keyword mapping errors
+* Allow '_' character in mapping_id value
+* Implied Roles API
+* Revert "Unit test for checking cross-version migrations compatibility"
+* replace tenant with project in cli.py
 * Fix schema validation to use JSONSchema for empty entity
-* Refactors validation tests to better see the cases
+* Replace tenant for project in resource files
+* Reuse project scoped token check for trusts
+* Add checks for project scoped data creep to tests
+* Add checks for domain scoped data creep
+* Use the oslo.utils.reflection to extract the class name
+* Test hyphens instead of underscores in request attributes
+* Simplify admin_required policy
+* Add caching to role assignments
+* Enable bandit tests
+* Update bandit.yaml
+* Enhance manager list_role_assignments to support group listing
+* remove KVS backend for keystone.contrib.revoke
 * Fix trust redelegation and associated test
 * use self.skipTest instead of self.skip
+* Removed deprecated revoke KVS backend
+* Revert "skip test_get_token_id_error_handling to get gate passing"
+* Updated from global requirements
+* Updated from global requirements
+* skip test_get_token_id_error_handling to get gate passing
+* Ensure pycadf initiator IDs are UUID
+* Check for circular references when expanding implied roles
+* Improves domain name case sensitivity tests
+* Fixes style issues in a v2 controller tests
+* Prevents creating is_domain=True projects in v2
+* Refactors validation tests to better see the cases
+* Remove keystone/common/cache/_memcache_pool.py
+* Update mod_wsgi + cache config docs
+* Address comments from Implied Role manager patch
+* Fix nits in include names patch
+* Unit test for checking cross-version migrations compatibility
+* Online schema migration documentation
+* Updated from global requirements
+* Remove additional references to ldap role attribs
+* Remove duplicate LDAP test class
+* Remove more ldap project references
+
+9.0.0.0b2
+---------
+
+* Add testcases to check cache invalidation
+* Fix typo abstact in comments
+* deprecate write support for identity LDAP
+* Deprecate `hash_algorithm` config option
+* Mark memcache and memcache_pool token deprecated
+* List assignments with names
+* Remove LDAP Role Backend
+* Remove LDAP Resource and LDAP Assignment backends
+* Removes KVS catalog backend
+* Fix docstring
+* Strengthen Mapping Validation in Federation Mappings
+* Add checks for token data creep using jsonschema
+* Deprecating API v2.0
+* Implied roles driver and manager
+* Add support for strict url safe option on new projects and domains
+* Remove bandit tox environment
+* Add linters environment, keep pep8 as alias
+* Make sure the assignment creation use the right arguments
+* Fix indentation for oauth context
 * Imported Translations from Zanata
+* document the bootstrapping process
+* Add release note for revert of c4723550aa95be403ff591dd132c9024549eff10
+* Updated from global requirements
+* Enable `id`, `enabled` attributes filtering for list IdP API
+* Improve Conflict error message in IdP creation
+* Fedora link is too old and so updated with newer version
+* Support the reading of default values of domain configuration options
+* Correct docstrings for federation driver interface
+* Update v3policysample tests to use admin_project not special domain_id
+* Enable limiting in ldap for groups
+* Enable limiting in ldap for users
+* Doc FIX
+* Store config in drivers and use it to get list_limit
+* Add asserts for service providers
+* Fix incorrect signature in federation legacy V8 wrapper
+* Tidy up release notes for V9 drivers
+* Adds an explicit utils import in test_v3_protection.py
+* Refactor test auth_plugin config into fixture
+* Create V9 version of resource driver interface
+* Updated from global requirements
+* Separate trust crud tests from trust auth tests
+* Delete checks for default domain delete
+* correct help text for bootstrap command
+* Replace unicode with six.text_type
+* Escape DN in enabled query
+* Test enabled emulation with special user_tree_dn
+* SQL migrations for implied roles
+* Revert "Validate domain ownership for v2 tokens"
+* Use assertIn to check if collection contains value
+* Updated from global requirements
+* Perform middleware tests with webtest
+* De-duplicate fernet payload tests
+* Reference driver methods through the Manager
 * Fix users in group and groups for user exact filters
-* Add audit IDs to revocation events
 * Expose defect in users_in_group, groups_for_user exact filters
-* Ensure endpoints returned is filtered correctly
+* Replace deprecated library function os.popen() with subprocess
+* OAuth1 driver doesnt inherit its interface
+* Update man pages with Mitaka version and dates
+* Fixes hacking logger test cases to use same base
+* Adds a hacking check looking for Logger.warn usage
+* Change LOG.warn to LOG.warning
+* Remove redundant check after enforcing schema validation
+* Updating sample configuration file
+* Create V9 version of federation driver interface
+* Do not use __builtin__ in python3
+* Define paste entrypoints
+* Add schema for federation protocol
+* Expose method list inconsistency in federation api
+* remove irrelevant parenthesis
+* Add return value
+* Test: make enforce_type=True in CONF.set_override
+* Updated from global requirements
+* Add schema for identity provider
+* Updating sample configuration file
+* Use six.moves.reload_module instead of builtin reload
+* Fix the incompatible issue in response header
+* Wrong usage of "an"
+* Correct fernet provider reference
+* Correct DN/encoding in test
+* Support url safe restriction on new projects and domains
+* Correct the class name of the V9 LDAP role driver
+* Wrong usage of "a/an"
+* Trival: Remove unused logging import
+* Updating sample configuration file
+* Fix pep8 job
+* Fix some inconsistency in docstrings
 * Fix 500 error when no fernet token is passed
+* Cleanup tox.ini py34 test list
+* Fixes kvs cache key mangling issue for Py3
+* Some small improvements on fernet uuid handling
 * Updated from global requirements
+* Updating sample configuration file
+* Fix key_repository_signature method for python3
+* Add audit IDs to revocation events
+* Enable os_inherit of Keystone v3 API
+* Use pip (and DevStack) instead of setuptools in docs
+* Correct developer documentation on venv creation
+* Updating sample configuration file
 * Updated from global requirements
+* Validate domain for DB-based domain config. CRUD
+* fix up release notes, file deprecations under right title
+* Updated Cloudsample
+* Update `developing.rst` to remove extensions stuff
+* Verify that user is trustee only on issuing token
+* Adds a base class for functional tests
+* Make `bootstrap` idempotent
+* Add `keystone-manage bootstrap` command
+* Changed the key repo validation to allow read only
+* Deprecated tox -downloadcache option removed
+* Fix defect in list_user_ids that only lists direct user assignments
+* Show defect in list_user_ids that only lists direct user assignments
+* Add API route for list role assignments for tree
+* Use list_role_assignments to get projects/domains for user
+* Add `type' filter for list_credentials_for_user
+* Clean up new_credential_ref usage and surrounding code
+* Create neutron service in sample_data.sh
+* Updating sample configuration file
 * Updated from global requirements
-* More useful message when using direct driver import
+* Limiting for fake LDAP
+* Make @truncated common for all backends
+* Fix exposition of bug about limiting with ldap
+* Use assertDictEqual instead of assertEqualPolicies
+* refactor: Remove unused test method
+* Remove unfixable FIXME
+* Use new_policy_ref consistently
+* fix reuse of variables
+* Remove comments on enforcing endpoints for trust
+* refactor: move the common code to manager layer
+* Create V9 Role Driver
+* Create new version of assignment driver interface
+* Remove keystoneclient tests
+* Verify that attribute `enabled` equals True
+* Remove invalid comment about LDAP domain support
+* Pass dict into update() rather than **kwargs
+* Refactor test use of new_*_ref
+* Cleans up code for `is_admin` in tokens
+* Deprecate ldap Role
+* Update extensions links
+* Improve comments in test_catalog
+* Fix for GET project by project admin
+* Fix multiline strings with missing spaces
+* Updating sample configuration file
+* Remove invalid TODO in extensions
+* Updated from global requirements
+* Refactor: Remove use of self where not needed
+* Refactor: Move uncommon entities from setUp
+* Split resource tests from assignment tests
+* Remove invalid TODO related to bug 1265071
+* Fix test_crud_user_project_role_grants
+* Deprecate the pki and pkiz token providers
+* Remove invalid FIXME note
+* Refactor: Use Federation constants where possible
+* Remove exposure of routers at package level
+* Update API version info for Liberty
+* remove version from setup.cfg
+* Ensure endpoints returned is filtered correctly
+* Put py34 first in the env order of tox
+
+9.0.0.0b1
+---------
+
+* Add release notes for mitaka-1
+* set `is_admin` on tokens for admin project
+* Use unit.new_project_ref consistently
+* Reference environment close to use
+* refactor: move variable to where it's needed
+* Needn't care about the sequence for cache validation
+* Updated from global requirements
+* Fix a typo in notifications function doc
+* Remove RequestBodySizeLimiter from middleware
+* Optimize "open" method with context manager
+* eventlet: handle system that misses TCP_KEEPIDLE
 * force releasenotes warnings to be treated as errors
-
-8.0.1
------
-
+* Cleanup region refs
+* Remove `extras` from token data
+* Use subprocess.check_output instead of Popen
+* Remove deprecated notification event_type
+* Remove check_role_for_trust
+* Correct RoleNotFound usage
+* Remove example extension
+* Updating sample configuration file
+* Correct docstring warnings
+* Using the right format to render the docstring correctly
+* Add release notes for mitaka thus far
+* Accepts Group IDs from the IdP without domain
+* Cleanup use of service refs
+* Update docs for legacy keystone extensions
+* Correct SecurityError with unicode args
 * Updated from global requirements
-* Add liberty release notes in YAML format
-* Add reno for release notes management
-* Remove hardcoded LDAP group schema from emulated enabled mix-in
+* Use idp_id and protocol_id in jsonhome
+* Use standard credential_id parameter in jsonhome
+* Remove core module from the legacy endpoint_filter extension
+* Minor cleanups for usage of group refs
+* Reject user creation using admin token without domain
+* Add Trusts unique constraint to remove duplicates
+* deprecate `enabled` option for endpoint-policy extension
+* remove useless config option in endpoint filter
+* Use [] where a field is required
+* Manager support for projects acting as domains
+* Config option for insecure responses
+* Add missing colon separators to inline comments
+* Simplify LimitTests
+* Rationalize list role assignment routing
+* Enable listing of role assignments in a project hierarchy
+* Capital letters
+* remove use of magic numbers in sql migrate extension tests
+* Use new_trust_ref consistently
+* Updating sample configuration file
+* Move endpoint_filter migrations into keystone core
+* Move endpoint filter into keystone core
+* Move revoke sql migrations to common
+* Move revoke extension into core
+* Move oauth1 sql migrations to common
+* Move oauth1 extension into core
+* Move federation sql migrations to common
+* Move federation extension into keystone core
+* Fix string conversion in s3 handler for python 2
+* Fix inaccurate debug mode response
+* Use unit.new_user_ref consistently
 * Imported Translations from Zanata
 * Updated from global requirements
+* Add testcases to check cache invalidation in endpoint filter extension
+* Fix the wrong method name
+* Updating sample configuration file
+* change some punctuation marks
 * Updated from global requirements
+* Remove hardcoded LDAP group schema from emulated enabled mix-in
+* Exclude old Shibboleth options from docs
+* Updated from global requirements
+* Use new_domain_ref instead of manually created ref
+* Use new_region_ref instead of manually created dict
+* Document release notes process
+* Use new_service_ref instead of manually created dict
+* Use unit.new_group_ref consistently
+* Use unit.new_role_ref consistently
+* Use unit.new_domain_ref consistently
+* Use unit.new_region_ref() consistently
+* Use unit.new_service_ref() consistently
+* Move AuthContext middleware into its own file
+* Use unit.new_endpoint_ref consistently
+* Use list_role_assignments to get assignments by role_id
+* Pass kwargs when using revoke_api.list_events()
+* Add reno for release notes management
+* Make K2K Mapping Attribute Examples more visible
+* Add S3 signature v4 checking
+* Fix some nits inside validation/config.py
+* Add Mapping Combinations for Keystone to Keystone Federation
+* Remove manager-driver assignment metadata construct
+* Correct description in Keystone key_terms
+* Imported Translations from Zanata
+* Handle fernet payload timestamp differences
+* Fix fernet padding for python 3
+* More useful message when using direct driver import
+* Get user role without project id is not implemented
+* Update sample catalog templates
+* update mailmap with gyee's new email
+* Revert "Added CORS support to Keystone"
+* Updated from global requirements
+* test_backend_sql work with python34
+* Use assertTrue/False instead of assertEqual(T/F)
+* Fix the issues found with local conf
+* Add test for security error with no message
+* Add exception unit tests with different message types
+* Cleanup message handling in test_exception
+* Normalize fernet payload disassembly
+* Common arguments for fernet payloads assembly
+* Capitalize a Few Words
+* I18n safe exceptions
+* Keystone Spelling Errors in docstrings and comments
+* [rally] remove deprecated arg
+* Move endpoint_policy migrations into keystone core
+* Promote an arbitrary string to be a docstring
+* Fix D204: blank line required after class docstring (PEP257)
+* Fix D202: No blank lines after function docstring (PEP257)
+* Update Configuring Keystone doc for consistency
+* Comment spelling error in assignment.core file
+* Fix exceptions to use correct titles
+* Fix UnexpectedError exceptions to use debug_message_format
+* Fix punctuation in doc strings
+* Fix docstring
+* Updating sample configuration file
+* Explain default domain in docs for other services
+* Correct bashate issues in gen_pki.sh
+* Fix incorrect federated mapping example
+* change stackforge url to openstack url
+* Updated from global requirements
+* Adds already passing tests to py34 run
+* Wrong usage of "an"
+* Allow the PBR_VERSION env to pass through tox
+* Fix D200: 1 line docstrings should fit with quotes (PEP257)
+* Fix D210: No whitespaces allowed surrounding docstring text (PEP257)
+* Fix D300: Use """triple double quotes""" (PEP257)
+* Fix D402: First line should not be the function's "signature" (PEP257)
+* Fix D208: Docstring over indented. (PEP257)
+* Add docstring validation
+* Add caching to get_catalog
+* Fix fernet key writing for python 3
+* Update test modules passing on py34
+* Updated from global requirements
+* Forbid non-stripped endpoint urls
+* fix deprecation warnings in cache backends
+* Create tests for set_default_is_domain in LDAP
+* Enable try_except_pass Bandit test
+* Enable subprocess_without_shell_equals_true Bandit test
+* Correct typo in copyright
+* Updated from global requirements
+* switch to oslo.cache
+* Updating sample configuration file
+* Updated from global requirements
+* keystone-paste.ini docs for deployers are out of date
+* Correct the filename
+* More info in RequestContext
+* Fix some nits in `configure_federation.rst`
+* add placeholder migrations for liberty
+* Remove bas64utils and tests
+* Create a version package
+* Remove oslo.policy implementation tests from keystone
+* Refactor: Don't hard code 409 Conflict error codes
+* Fix use of TokenNotFound
+* Refactor: change 403 status codes in test names
+* Refactor: change 410 status codes in test names
+* Refactor: change 400 status codes in test names
+* Refactor: change 404 status codes in test names
+* Updated from global requirements
+* Imported Translations from Zanata
 * add initiator to v2 calls for additional auditing
+* Fixed missed translatable string inside exception
 * Handle 16-char non-uuid user IDs in payload
-* Update .gitreview
-* Switch to post-versioning
-* Add user domain info to federated fernet tokens
-* Unit tests for fernet validate_v3_token
+* Additional documentation for services
+* Rename fernet methods to match expiration timestamp
+* Updated from global requirements
+* Enable password_config_option_not_marked_secret Bandit test
+* Enable hardcoded_bind_all_interfaces Bandit test
+* Documentation for other services
+* Reclassify get_project_by_name() controller method
+* Trivial fix of some typos found
+* Filters is_domain=True in v2 get_project_by_name
+* Add test case passing is_domain flag as False
 
 8.0.0
 -----
 
 * Ensure token validation works irrespective of padding
-* Show v3 endpoints in v2 endpoint list
+* Ensure token validation works irrespective of padding
 * Imported Translations from Zanata
+* Rename RestfulTestCase.v3_authenticate_token() to v3_create_token()
+* Improving domain_id update tests
+* Show v3 endpoints in v2 endpoint list
+* Expose 1501698 bug
+* Replace sqlalchemy-migrate occurences from code.google to github
+* Fix unreachable code in test_v3 module
+* Imported Translations from Zanata
+* Use deepcopy of mapping fixtures in tests
+* Show v3 endpoints in v2 endpoint list
+* Enable Bandit 0.13.2 tests
+* Update bandit blacklist_imports config
+* Cleanup _build_federated_info
+* Add LimitRequestBody to sample httpd config
+* Make __all__ immutable
 * Skip rows with empty remote_ids
+* Includes server_default option in is_domain column
+* Remove unused get_user_projects()
+* Deprecate httpd/keystone.py
+* Skip rows with empty remote_ids
+* Fix order of arguments in assertDictEqual
+* Cleanup fernet validate_v3_token
+* Update bandit blacklist_calls config
+* Add unit test for creating RequestContext
+* Add user_domain_id, project_domain_id to auth context
+* Add user domain info to federated fernet tokens
+* Unit tests for fernet validate_v3_token
+* Fix order of arguments in assertEqual
+* Updating sample configuration file
+* Cleanup of Translations
+* Imported Translations from Zanata
+* Uses constants for 5XX http status codes in tests
+* Fixes v3_authenticate_token calls - no default
+* Fixes the way v3_admin is called to match its def
+* Declares expected_status in method signatures
+* Refactor: Don't hard code the error code
+* Correct docstrings
+* Correct comment to not be driver-specific
+* Move development environment setup instructions to standard location
+* Fix typo in config help
+* Use the correct import for range
+* Adds interface tests for timeutils
+* Add unit tests for token_to_auth_context
+* Updating sample configuration file
 
 8.0.0.0rc1
 ----------
 
+* Open Mitaka development
 * Bring bandit config up-to-date
 * Update the examples used for the trusted_dashboard option
 * Log message when debug is enabled
@@ -60,13 +707,17 @@ CHANGES
 * federation.idp use correct subprocess
 * Change ignore-errors to ignore_errors
 * Imported Translations from Zanata
+* Remove unused code in domain config checking
 * Relax newly imposed sql driver restriction for domain config
 * Add documentation for configuring IdP WebSSO
 * Updated from global requirements
 * check if tokenless auth is configured before validating
+* Fix the referred [app:app_v3] into [pipeline:api_v3]
 * Updated from global requirements
 * Issue deprecation warning if domain_id not specified in create call
+* functional tests for keystone on subpaths
 * Removed the extra http:// from JSON schema link
+* Document httpd for accept on /identity, /identity_admin
 * Updated from global requirements
 * Update federation router with missing call
 * Reject rule if assertion type unset
@@ -172,6 +823,7 @@ CHANGES
 * Improve a few random docstrings
 * Maintain datatypes when loading configs from DB
 * Remove "tenants" from user_attribute_ignore default
+* Use oslo_config PortOpt support
 * Updated from global requirements
 * Updated from global requirements
 * Fix the misspelling
