@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 9.0.0
-Release  : 81
+Release  : 82
 URL      : http://tarballs.openstack.org/keystone/keystone-9.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-9.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -93,6 +93,7 @@ python components for the keystone package.
 
 
 %prep
+cd ..
 %setup -q -n keystone-9.0.0
 %patch1 -p1
 %patch2 -p1
@@ -126,8 +127,6 @@ install -p -D -m 644 httpd/wsgi-keystone.conf  %{buildroot}/usr/share/defaults/h
 install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/public.ini  %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone
-install -m 0755 -d %{buildroot}/usr/share/nginx/conf.d
-install -p -D -m 644 httpd/keystone.conf %{buildroot}/usr/share/nginx/conf.d
 ## make_install_append end
 
 %files
@@ -155,7 +154,6 @@ install -p -D -m 644 httpd/keystone.conf %{buildroot}/usr/share/nginx/conf.d
 /usr/share/defaults/keystone/policy.v3cloudsample.json
 /usr/share/keystone/sample_data.sh
 /usr/share/keystone/wsgi-keystone.conf
-/usr/share/nginx/conf.d/keystone.conf
 /usr/share/uwsgi/keystone/admin.ini
 /usr/share/uwsgi/keystone/public.ini
 

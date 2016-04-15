@@ -12,6 +12,3 @@ install -p -D -m 644 httpd/wsgi-keystone.conf  %{buildroot}/usr/share/defaults/h
 install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/public.ini  %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone
-
-install -m 0755 -d %{buildroot}/usr/share/nginx/conf.d
-install -p -D -m 644 httpd/keystone.conf %{buildroot}/usr/share/nginx/conf.d
