@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 9.0.0
-Release  : 84
+Release  : 85
 URL      : http://tarballs.openstack.org/keystone/keystone-9.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-9.0.0.tar.gz
 Source1  : keystone.tmpfiles
