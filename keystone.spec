@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 9.0.0
-Release  : 85
+Release  : 86
 URL      : http://tarballs.openstack.org/keystone/keystone-9.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-9.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -93,7 +93,6 @@ python components for the keystone package.
 
 
 %prep
-cd ..
 %setup -q -n keystone-9.0.0
 %patch1 -p1
 %patch2 -p1
@@ -101,6 +100,7 @@ cd ..
 %patch4 -p1
 
 %build
+export LANG=C
 python2 setup.py build -b py2
 
 %check
@@ -123,7 +123,6 @@ install -p -D -m 755 tools/sample_data.sh %{buildroot}%{_datadir}/keystone/sampl
 install -p -D -m 644 httpd/wsgi-keystone.conf %{buildroot}%{_datadir}/keystone/
 for i in %{buildroot}/usr/share/defaults/keystone/*.sample; do mv $i ${i%.*}; done;
 install -m 0755 -d %{buildroot}/usr/share/defaults/httpd/conf.d
-install -p -D -m 644 httpd/wsgi-keystone.conf  %{buildroot}/usr/share/defaults/httpd/conf.d
 install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/public.ini  %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone
@@ -145,7 +144,6 @@ install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone
 
 %files data
 %defattr(-,root,root,-)
-/usr/share/defaults/httpd/conf.d/wsgi-keystone.conf
 /usr/share/defaults/keystone/default_catalog.templates
 /usr/share/defaults/keystone/keystone-paste.ini
 /usr/share/defaults/keystone/keystone.conf
