@@ -7,7 +7,6 @@ install -p -D -m 755 tools/sample_data.sh %{buildroot}%{_datadir}/keystone/sampl
 install -p -D -m 644 httpd/wsgi-keystone.conf %{buildroot}%{_datadir}/keystone/
 for i in %{buildroot}/usr/share/defaults/keystone/*.sample; do mv $i ${i%.*}; done;
 install -m 0755 -d %{buildroot}/usr/share/defaults/httpd/conf.d
-install -p -D -m 644 httpd/wsgi-keystone.conf  %{buildroot}/usr/share/defaults/httpd/conf.d
 
 install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
 install -p -D -m 644 httpd/public.ini  %{buildroot}/usr/share/uwsgi/keystone
