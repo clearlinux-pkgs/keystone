@@ -1,6 +1,64 @@
 CHANGES
 =======
 
+9.3.0
+-----
+
+* Catch potential SyntaxError in federation mapping
+* Enhance federation group mapping validation
+* Add mapping validation tests
+* Make bootstrap idempotent when it needs to be
+* Expose idempotency issue with bootstrap
+* Update constraints in tox.ini
+* Verify domain_id when get_domain is being called
+* Consistently round down timestamps
+
+9.2.0
+-----
+
+* Distributed cache namespace to invalidate regions
+* Add dummy domain_id column to cached role
+* Change LocalUser sql model to eager loading
+* Fix the username value in federated tokens
+* Handle catalog backends that don't support all functions
+
+9.1.0
+-----
+
+* Correct domain_id and name constraint dropping
+* /services?name=<name> API fails when using list_limit
+* Updated from global requirements
+* Honor ldap_filter on filtered group list
+* Return 404 instead of 401 for tokens w/o roles
+* Revert to caching fernet tokens the same way we do UUID
+* Bootstrap: enable and reset password for existing users
+* Honor ldap_filter on filtered user list
+
+9.0.2
+-----
+
+* Fix post jobs
+
+9.0.1
+-----
+
+* Updated from global requirements
+* Remove test_invalid_policy_raises_error
+* Allow 'domain' property for local.group
+* Add conflict validation for idp update
+* Fix fernet audit ids for v2.0
+* Make all fixture project_ids into uuids
+* Imported Translations from Zanata
+* Keystone jobs should honor upper-constraints.txt
+* Updated from global requirements
+* Imported Translations from Zanata
+* Fix totp test fails randomly
+* Fix KeyError when rename to a name is already in use
+* Fixes bug where the updated federated display_name is not returned
+* Set the values for the request_local_cache
+* Imported Translations from Zanata
+* Imported Translations from Zanata
+
 9.0.0
 -----
 
