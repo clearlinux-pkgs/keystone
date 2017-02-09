@@ -4,7 +4,7 @@
 #
 Name     : keystone
 Version  : 9.0.0
-Release  : 89
+Release  : 90
 URL      : http://tarballs.openstack.org/keystone/keystone-9.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-9.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -102,7 +102,7 @@ python components for the keystone package.
 
 %build
 export LANG=C
-export SOURCE_DATE_EPOCH=1486598660
+export SOURCE_DATE_EPOCH=1486603971
 python2 setup.py build -b py2
 python3 setup.py build -b py3
 
@@ -112,7 +112,7 @@ export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 PYTHONPATH=%{buildroot}/usr/lib/python2.7/site-packages python2 setup.py test || :
 %install
-export SOURCE_DATE_EPOCH=1486598660
+export SOURCE_DATE_EPOCH=1486603971
 rm -rf %{buildroot}
 python2 -tt setup.py build -b py2 install --root=%{buildroot} --force
 python3 -tt setup.py build -b py3 install --root=%{buildroot} --force
