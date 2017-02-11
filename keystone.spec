@@ -6,7 +6,7 @@
 #
 Name     : keystone
 Version  : 9.3.0
-Release  : 91
+Release  : 92
 URL      : http://tarballs.openstack.org/keystone/keystone-9.3.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-9.3.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -106,7 +106,7 @@ python components for the keystone package.
 
 %build
 export LANG=C
-export SOURCE_DATE_EPOCH=1486681559
+export SOURCE_DATE_EPOCH=1486772525
 python2 setup.py build -b py2
 
 %check
