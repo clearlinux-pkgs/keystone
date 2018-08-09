@@ -6,7 +6,7 @@
 #
 Name     : keystone
 Version  : 13.0.1
-Release  : 95
+Release  : 96
 URL      : http://tarballs.openstack.org/keystone/keystone-13.0.1.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-13.0.1.tar.gz
 Source1  : keystone.tmpfiles
@@ -38,6 +38,7 @@ Requires: keystonemiddleware
 Requires: lxml
 Requires: oauthlib
 Requires: openstackdocstheme
+Requires: os-api-ref
 Requires: oslo.cache
 Requires: oslo.concurrency
 Requires: oslo.config
@@ -72,7 +73,7 @@ BuildRequires : dogpile.cache-python
 BuildRequires : extras
 BuildRequires : extras-python
 BuildRequires : jsonschema-python
-BuildRequires : msgpack-python-python
+BuildRequires : msgpack-python
 BuildRequires : oauthlib-python
 BuildRequires : oslo.db-python
 BuildRequires : oslo.middleware-python
@@ -148,7 +149,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1533789342
+export SOURCE_DATE_EPOCH=1533822123
 python3 setup.py build -b py3
 
 %check

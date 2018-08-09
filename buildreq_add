@@ -2,7 +2,7 @@ dogpile.cache-python
 extras
 extras-python
 jsonschema-python
-msgpack-python-python
+msgpack-python
 oauthlib-python
 oslo.db-python
 oslo.middleware-python
