@@ -1,10 +1,22 @@
 CHANGES
 =======
 
+13.0.1
+------
+
+* Reduce duplication in federated auth APIs
+* Update RDO install guide for v3
+* Fix json schema nullable to add None to ENUM
+* Fix assert test error under py3.6
+* Imported Translations from Zanata
+* Add release note for keystone v2 removal
+* Remove @expression from tags
+
 13.0.0
 ------
 
 * Update 3.10 versioning to limits and system scope
+* Remove v2.0 policies
 * Populate application credential data in token
 * Imported Translations from Zanata
 * Add docs for application credentials
