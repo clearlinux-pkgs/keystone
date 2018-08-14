@@ -6,7 +6,7 @@
 #
 Name     : keystone
 Version  : 13.0.1
-Release  : 96
+Release  : 97
 URL      : http://tarballs.openstack.org/keystone/keystone-13.0.1.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-13.0.1.tar.gz
 Source1  : keystone.tmpfiles
@@ -36,6 +36,7 @@ Requires: flake8-docstrings
 Requires: jsonschema
 Requires: keystonemiddleware
 Requires: lxml
+Requires: msgpack
 Requires: oauthlib
 Requires: openstackdocstheme
 Requires: os-api-ref
@@ -92,6 +93,7 @@ BuildRequires : python-dev
 BuildRequires : setuptools
 BuildRequires : tox
 BuildRequires : virtualenv
+Patch1: nodep.patch
 
 %description
 Team and repository tags
@@ -143,13 +145,14 @@ python3 components for the keystone package.
 
 %prep
 %setup -q -n keystone-13.0.1
+%patch1 -p1
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1533822123
+export SOURCE_DATE_EPOCH=1534216294
 python3 setup.py build -b py3
 
 %check
