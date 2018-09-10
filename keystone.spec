@@ -6,7 +6,7 @@
 #
 Name     : keystone
 Version  : 14.0.0
-Release  : 98
+Release  : 99
 URL      : http://tarballs.openstack.org/keystone/keystone-14.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-14.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -21,6 +21,7 @@ Requires: keystone-license
 Requires: keystone-python
 Requires: Babel
 Requires: Flask
+Requires: Flask-RESTful
 Requires: Routes
 Requires: SQLAlchemy
 Requires: Sphinx
@@ -75,6 +76,7 @@ Requires: sqlalchemy-migrate
 Requires: stestr
 Requires: stevedore
 Requires: testtools
+BuildRequires : Flask-RESTful
 BuildRequires : buildreq-distutils3
 BuildRequires : dogpile.cache-python
 BuildRequires : extras
@@ -156,7 +158,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1536548749
+export SOURCE_DATE_EPOCH=1536553260
 python3 setup.py build -b py3
 
 %check

@@ -21,3 +21,4 @@ python-dev
 setuptools
 tox
 virtualenv
+Flask-RESTful
