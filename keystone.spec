@@ -6,7 +6,7 @@
 #
 Name     : keystone
 Version  : 14.0.0
-Release  : 99
+Release  : 100
 URL      : http://tarballs.openstack.org/keystone/keystone-14.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-14.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -89,6 +89,7 @@ BuildRequires : oslo.middleware-python
 BuildRequires : oslo.policy-python
 BuildRequires : oslo.service-python
 BuildRequires : oslo.utils-python
+BuildRequires : osprofiler
 BuildRequires : pbr
 BuildRequires : pip
 BuildRequires : pluggy
@@ -158,7 +159,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1536553260
+export SOURCE_DATE_EPOCH=1536553456
 python3 setup.py build -b py3
 
 %check
