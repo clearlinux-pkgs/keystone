@@ -1,36 +1,256 @@
 CHANGES
 =======
 
-13.0.1
+14.0.0
 ------
 
+* Add placeholder migrations for Rocky
+* Update .gitreview for stable/rocky
+
+14.0.0.0rc1
+-----------
+
+* Allow for more robust config checking with keystone-manage
+* Convert limits and registered limits to flask dispatching
+* Add a release note for bug 1785164
+* Error location of parameters in api-ref:project tags
+* Code optimization of create application credential
+* Do not allow create limits for domain
+* Fix json indentation of notification sample
+* Convert OS-AUTH1 paths to flask dispatching
+* Clean up token extra code
+* Remove KeystoneToken object
+* Convert OS-REVOKE to flask dispatching
+* Address FIXMEs for listing revoked tokens
+* Move unenforced\_api decorator to module function
+* Remove direct calls to auth.controllers in some tests
+* Move validate\_issue\_token\_auth from controllers
+* Api-ref: Correct response code
+* Adding missing comma in docs
+* Expose random uuid bug in cadf notifications
+* Boostrap CLI tests no longer call auth controller
+* Implement "no-update" test for trusts
+* Move trusts to flask native dispatching
+* Address nits in strict-two-level implementation
+* Remove get\_catalog usage from contrib
+
+14.0.0.0b3
+----------
+
+* Deprecate [token] infer\_roles=False
 * Reduce duplication in federated auth APIs
-* Update RDO install guide for v3
-* Fix json schema nullable to add None to ENUM
-* Fix assert test error under py3.6
+* Fix RBACEnforcer Comment
+* Mirror self-link trust check from tempest
+* Trusts do not implement patch
+* Allow for 'extension' rel in json home
+* Add pycadf initiator for flask resource
+* Use oslo\_serialization.jsonutils
+* Correctly pull input data for enforcement
+* Delete project limits when deleting project
+* Add project hierarchical tree check when Keystone start
+* Update project depth check
+* Add include\_limits filter
+* Bump lower constraint for pysaml2 to 4.5.0
+* Allow class-level definition of API URL Prefix
+* Move Credentials API to Flask Native
+* Add project\_id filter for listing limit
+* Strict two level limit model
+* Switch to python-ldap
+* Add correct self-link
+* Properly remove content-type on HTTP 204
+* Increase test coverage of entity\_type id mapping query
+* Cleanup keystone.token.providers.common
+* Remove remnants of token bind
+* Simplify the token provider API
+* Add serialization for TokenModel object
+* Introduce new TokenModel object
+* Don't allow legacy and native flask to share paths
+* Remove uuid token size check from doctor
+* Do not use flask.g imported as g
+* Fix keystone.common.rbac\_enforcer.\_\_init\_\_.py exporting
+* Make keystone.server.flask more interesting for importing
+* Flesh out and add testing for flask\_RESTful scaffolding
+* Update pypi url to new url
+* Invalidate 'computed assignments' cache when creating a project
+* Filter project\_id for list limits
+* Expose endpoint to return enforcement model
+* Add docs for case-insensitivity in keystone
+* Clarifications to API & Scenario Tests
+* Remove enable config option of trust feature
+* Fix keystone-manage saml\_idp\_metadata under python3
+* Only upload SP metadata to testshib.org if IDP id is testshib
+* Ignore .eggs dir as well
+* Implement enforcement model logic in Manager
+* Add registered\_limit\_id column for limit
+* Add auto increase primary key for unified limit
+* Address minor comments from initial impl RBACEnforcer
+* Refactor \_handle\_shadow\_and\_local\_users
+* Refactor \_set\_domain\_id\_and\_mapping functions
+* Move keystone.server.common to keystone.server
+* Add support for enforce\_call to set value on flask.g
+* Refactor - remove extra for loop
+* Remove token bind capabilities
+* Address minor comments to 404 error detection
+* Exposing ambiguity bug when querying role assignments
+* pycrypto is not used by keystone
+* Add new "How Can I Help?" contributor guide
+* Added check to avoid keyerror "user['name']"
+* Implement base for new RBAC Enforcer
+* Refactor trust roles check
+* Make it easy to identify a 404 from Flask
+* Don't replace the whole app just the wsgi\_app backing
+* Add support for before and after request functions
+* Convert json\_home and version discovery to Flask
+* Keystone adheres to public\_endpoint opt only
+* Implement scaffolding for Flask-RESTful use
+* Add Flask-RESTful and update flask minimum(s)
+* Fix keystone-manage mapping\_purge with --type option
+* Override oauthlib docstrings that fail with Sphinx 1.7.5
+* Simple usage docs for implied roles
+* Fix duplicate role names in trusts bug
+* Expose duplicate role names bug in trusts
+* Remove unclear wording in parameters
+* Filter by entity\_type in get\_domain\_mapping\_list
+* Migrate all password hashes to the new location if needed
+* Add policy for limit model protection
+* Api-ref: Refresh the Update APIs for limits
 * Imported Translations from Zanata
-* Add release note for keystone v2 removal
+* Remove a useless function
+* Clarify complicated sentence in docs
+* Unified limit update APIs Refactor
+* Store JSON Home Resources off the composing router
+* Ensure default roles created during bootstrap
+* Add release notes link to README
+* Remove duplicated test
+* Expand on debug\_middleware option
+* Clarify scope responses in authentication api ref
+* fix tox python3 overrides
+* Add Flaskification release-note
+* Remove pastedeploy
+* Flaskification cleanup
+* Remove the rest of v2.0 legacy
+* Add in ability to load DEBUG middleware
+* Revert "Rename fernet\_utils to token\_utils"
+* Convert Keystone to use Flask
+
+14.0.0.0b2
+----------
+
+* Correct test\_v3\_oauth1.test\_deleting\_project\_also\_invalidates\_tokens
+* Correct test\_v3\_oauth1.test\_change\_user\_password\_also\_deletes\_tokens
+* Correct test\_v3\_oauth1.test\_bad\_authorizing\_roles\_id
+* Correct test\_v3\_oauth1.test\_bad\_authorizing\_roles\_name
+* Fix warnings in documentation
+* fix rally docs url
+* Decouple bootstrap from cli module
+* Handle empty token key files
+* Remove some unused functions
+* Update tests to work with WebOb 1.8.1
+* Consolidate oauth1.rst
+* Remove the TokenAuth middleware
+* Remove token driver configuration
+* Fix the test for unique IdP
+* Consolidate health-check-middleware.rst
+* Limit description support
+* The migration script to add description for limit
+* Update IdP sql model
+* Remove dead dependency injection code
+* Remove unused assertions from test\_v3.py
+* Remove dead code in token provider
+* Remove unused exception
+* Do not return all the limits for POST request
+* Add configuration option for enforcement models
+* Use the provider\_api module in limit controller
+* Fix the outdated URL
+* Remove policy service from architecture.rst
+* Invalidate the shadow user cache when deleting a user
+* Add conceptual overview of the service catalog
+* Trivial: Update pypi url to new url
+* Update the RDO installation guide to use port 5000
+* Update keystone functional tests
+
+14.0.0.0b1
+----------
+
+* Remove the sample .conf file
+* Allow blocking users from self-service password change
+* Add prerequisite package note to Keystone install guide
+* Update auth\_uri option to www\_authenticate\_uri
+* Fix json schema nullable to add None to ENUM
+* Use consistent role schema in token response validation
+* Corrects spelling of MacOS
+* Fix 500 error when deleting domain
+* Allow cleaning up non-existant group assignments
+* Follow the new PTI for document build
+* Use the new pysaml2 constraints
+* Fix incompatible requirement in lower-constraints
+* Update install guides
+* Fix mispelling of accommodate in install docs
+* Fix list\_limit doesn't work correctly for domain
+* Expose a bug that list\_limit doesn't work correctly
+* Log warning when using token\_flush
+* Removal of deprecated direct driver loading
+* Make tags filter match subset rather than exact
+* Updated from global requirements
+* Update RDO install guide for v3
+* Remove admin interface in sample Apache file
+* add lower-constraints job
+* Fix integer -> method conversion for python3
+* Fix user email in federated shadow users
+* Remove references to v2.0 from external developer doc
+* Remove references to UUID from token documentation
+* Add logging for xmlsec1 installation
+* Updated from global requirements
+* Mark the implied role API as stable
+* Add note to keystone-manage bootstrap doc
+* Fix assert test error under py3.6
+* Fix api-ref for project tag create
+* Updated from global requirements
+* Fixing multi-region support in templated v3 catalog
+* Update links in README
+* Use different labels for user and project names
+* Imported Translations from Zanata
+* Add user documentation for JSON Home
+* Fix formatting of ImportError
+* Imported Translations from Zanata
+* Updated from global requirements
+* Imported Translations from Zanata
 * Remove @expression from tags
-
-13.0.0
-------
-
+* Work around deprecations for opportunistic tests
+* Api-ref: fix resource\_limit format
+* Correct typo in identity API reference
+* Imported Translations from Zanata
+* Consolidate identity-token-binding.rst
+* Consolidate identity-service-api-protection.rst
+* Add new setup commands for token keys
+* Consolidate endpoint-filtering.rst
+* Remove unnecessary config overrides from fernet tests
+* Make assertValidFernetKey assertion more robust
 * Update 3.10 versioning to limits and system scope
 * Remove v2.0 policies
 * Populate application credential data in token
 * Imported Translations from Zanata
+* Simplify federation and oauth token callbacks
+* Simplify token persistence callbacks
+* Refactor token cache invalidation callbacks
+* Remove needs\_persistence property from token providers
+* Imported Translations from Zanata
+* Use OSC in application credential documentation
 * Add docs for application credentials
-* Delete system role assignments when deleting groups
+* Force SQLite to properly deal with foreign keys
+* Remove unused class variables from token provider
+* Imported Translations from Zanata
 * Grant admin a role on the system during bootstrap
 * Fix querying role\_assignment with system roles
-* Imported Translations from Zanata
+* Delete system role assignments when deleting groups
 * Expose bug in system assignment when deleting groups
 * Delete system role assignments when deleting users
 * Expose bug in system assignment when deleting users
 * Expose bug in /role\_assignments API with system-scope
+* Remove the sql token driver and uuid token provider
 * Imported Translations from Zanata
-* Update UPPER\_CONSTRAINTS\_FILE for stable/queens
-* Update .gitreview for stable/queens
+* Update reno for stable/queens
+* Imported Translations from Zanata
 
 13.0.0.0rc1
 -----------
@@ -38,6 +258,7 @@ CHANGES
 * Add placeholder migrations for Queens
 * Delete SQL users before deleting domain
 * Reorganize api-ref: v3-ext federation mapping.inc
+* Update OBS install docs for v2 removal
 * Reorganize api-ref: v3-ext federation service-provider
 * Reorganize api-ref: v3-ext oauth.inc
 * Replace port 35357 with 5000 for ubuntu guide
@@ -686,6 +907,7 @@ CHANGES
 * Fix duplicate handling for user-specified IDs
 * Removing group role assignments results in overly broad revocation events
 * Typos in the LoadAuthPlugins note
+* Remove domains \*-log-\* from compile\_catalog
 * Add instruction to restart apache
 * Exchange cURL examples for openstackclient
 * Updated from global requirements

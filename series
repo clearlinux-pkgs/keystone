@@ -3,4 +3,4 @@
 #0005-Serve-keystone-via-nginx-with-uwsgi.patch
 #0006-Set-default-syslog.patch
 #0001-Remove-admin_token_auth.patch
-nodep.patch
+#nodep.patch

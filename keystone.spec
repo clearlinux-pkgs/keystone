@@ -5,12 +5,12 @@
 # Source0 file verified with key 0xC36CDCB4DF00C68C (infra-root@openstack.org)
 #
 Name     : keystone
-Version  : 13.0.1
-Release  : 97
-URL      : http://tarballs.openstack.org/keystone/keystone-13.0.1.tar.gz
-Source0  : http://tarballs.openstack.org/keystone/keystone-13.0.1.tar.gz
+Version  : 14.0.0
+Release  : 98
+URL      : http://tarballs.openstack.org/keystone/keystone-14.0.0.tar.gz
+Source0  : http://tarballs.openstack.org/keystone/keystone-14.0.0.tar.gz
 Source1  : keystone.tmpfiles
-Source99 : http://tarballs.openstack.org/keystone/keystone-13.0.1.tar.gz.asc
+Source99 : http://tarballs.openstack.org/keystone/keystone-14.0.0.tar.gz.asc
 Summary  : OpenStack Identity
 Group    : Development/Tools
 License  : Apache-2.0
@@ -20,19 +20,21 @@ Requires: keystone-python3
 Requires: keystone-license
 Requires: keystone-python
 Requires: Babel
-Requires: Paste
-Requires: PasteDeploy
+Requires: Flask
 Requires: Routes
 Requires: SQLAlchemy
 Requires: Sphinx
 Requires: WebOb
 Requires: WebTest
 Requires: bandit
+Requires: bashate
 Requires: bcrypt
+Requires: coverage
 Requires: cryptography
 Requires: dogpile.cache
 Requires: fixtures
 Requires: flake8-docstrings
+Requires: hacking
 Requires: jsonschema
 Requires: keystonemiddleware
 Requires: lxml
@@ -40,6 +42,7 @@ Requires: msgpack
 Requires: oauthlib
 Requires: openstackdocstheme
 Requires: os-api-ref
+Requires: os-testr
 Requires: oslo.cache
 Requires: oslo.concurrency
 Requires: oslo.config
@@ -64,9 +67,12 @@ Requires: python-memcached
 Requires: python-mock
 Requires: pytz
 Requires: reno
+Requires: requests
 Requires: scrypt
 Requires: six
+Requires: sphinxcontrib-apidoc
 Requires: sqlalchemy-migrate
+Requires: stestr
 Requires: stevedore
 Requires: testtools
 BuildRequires : buildreq-distutils3
@@ -93,7 +99,6 @@ BuildRequires : python-dev
 BuildRequires : setuptools
 BuildRequires : tox
 BuildRequires : virtualenv
-Patch1: nodep.patch
 
 %description
 Team and repository tags
@@ -144,15 +149,14 @@ python3 components for the keystone package.
 
 
 %prep
-%setup -q -n keystone-13.0.1
-%patch1 -p1
+%setup -q -n keystone-14.0.0
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1534216294
+export SOURCE_DATE_EPOCH=1536548749
 python3 setup.py build -b py3
 
 %check
