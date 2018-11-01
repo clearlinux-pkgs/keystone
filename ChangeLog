@@ -1,10 +1,23 @@
 CHANGES
 =======
 
+14.0.1
+------
+
+* Add caching on trust role validation to improve performance
+* Invalidate app cred AFTER deletion
+* Update API version to 3.11
+* LDAP attribute names non-case-sensitive
+* Mapped Groups don't exist breaks WebSSO
+* Update RDO install guide for v3
+* Ensure view args is in policy dict
+* import zuul job settings from project-config
+
 14.0.0
 ------
 
 * Add placeholder migrations for Rocky
+* Update UPPER\_CONSTRAINTS\_FILE for stable/rocky
 * Update .gitreview for stable/rocky
 
 14.0.0.0rc1
