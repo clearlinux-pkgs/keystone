@@ -6,7 +6,7 @@
 #
 Name     : keystone
 Version  : 14.0.1
-Release  : 102
+Release  : 103
 URL      : http://tarballs.openstack.org/keystone/keystone-14.0.1.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-14.0.1.tar.gz
 Source1  : keystone.tmpfiles
