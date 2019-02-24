@@ -6,12 +6,12 @@
 #
 Name     : keystone
 Version  : 14.0.1
-Release  : 106
+Release  : 107
 URL      : http://tarballs.openstack.org/keystone/keystone-14.0.1.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-14.0.1.tar.gz
 Source1  : keystone.tmpfiles
 Source99 : http://tarballs.openstack.org/keystone/keystone-14.0.1.tar.gz.asc
-Summary  : OpenStack Identity
+Summary  : Lightweight multi-platform, multi-architecture assembler framework
 Group    : Development/Tools
 License  : Apache-2.0
 Requires: keystone-bin = %{version}-%{release}
@@ -24,7 +24,6 @@ Requires: Flask
 Requires: Flask-RESTful
 Requires: Routes
 Requires: SQLAlchemy
-Requires: Sphinx
 Requires: WebOb
 Requires: bandit
 Requires: bcrypt
@@ -34,8 +33,6 @@ Requires: jsonschema
 Requires: keystonemiddleware
 Requires: msgpack
 Requires: oauthlib
-Requires: openstackdocstheme
-Requires: os-api-ref
 Requires: oslo.cache
 Requires: oslo.concurrency
 Requires: oslo.config
@@ -57,42 +54,58 @@ Requires: pysaml2
 Requires: python-keystoneclient
 Requires: python-memcached
 Requires: pytz
-Requires: reno
 Requires: scrypt
 Requires: six
-Requires: sphinxcontrib-apidoc
 Requires: sqlalchemy-migrate
 Requires: stevedore
 BuildRequires : Flask-RESTful
+BuildRequires : Mako-python
+BuildRequires : Tempita-python
+BuildRequires : alembic-python
+BuildRequires : bcrypt-python
 BuildRequires : buildreq-distutils3
+BuildRequires : defusedxml-python
 BuildRequires : dogpile.cache-python
 BuildRequires : extras
 BuildRequires : extras-python
 BuildRequires : jsonschema-python
+BuildRequires : keystonemiddleware
 BuildRequires : msgpack-python
 BuildRequires : oauthlib-python
+BuildRequires : oslo.cache-python
+BuildRequires : oslo.context-python
 BuildRequires : oslo.db-python
+BuildRequires : oslo.log-python
+BuildRequires : oslo.messaging-python
 BuildRequires : oslo.middleware-python
 BuildRequires : oslo.policy-python
 BuildRequires : oslo.service-python
 BuildRequires : oslo.utils-python
 BuildRequires : osprofiler
+BuildRequires : passlib-python
 BuildRequires : pbr
 BuildRequires : pip
 BuildRequires : pluggy
+BuildRequires : prettytable
 BuildRequires : py-python
 BuildRequires : pycadf-python
 BuildRequires : pyrsistent-python
 BuildRequires : pysaml2-python
 BuildRequires : pytest
 BuildRequires : python-dev
+BuildRequires : python-editor-python
+BuildRequires : scrypt-python
 BuildRequires : setuptools
+BuildRequires : sqlalchemy-migrate-python
+BuildRequires : sqlparse
+BuildRequires : tempest-python
 BuildRequires : tox
 BuildRequires : virtualenv
 
 %description
-Team and repository tags
-        ========================
+This is a database migration repository.
+More information at
+https://git.openstack.org/cgit/openstack/sqlalchemy-migrate
 
 %package bin
 Summary: bin components for the keystone package.
@@ -146,7 +159,8 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1541267365
+export SOURCE_DATE_EPOCH=1551034717
+export MAKEFLAGS=%{?_smp_mflags}
 python3 setup.py build
 
 %check
