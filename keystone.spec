@@ -5,12 +5,12 @@
 # Source0 file verified with key 0x1A541148054E9E38 (infra-root@openstack.org)
 #
 Name     : keystone
-Version  : 14.0.1
-Release  : 107
-URL      : http://tarballs.openstack.org/keystone/keystone-14.0.1.tar.gz
-Source0  : http://tarballs.openstack.org/keystone/keystone-14.0.1.tar.gz
+Version  : 14.1.0
+Release  : 108
+URL      : http://tarballs.openstack.org/keystone/keystone-14.1.0.tar.gz
+Source0  : http://tarballs.openstack.org/keystone/keystone-14.1.0.tar.gz
 Source1  : keystone.tmpfiles
-Source99 : http://tarballs.openstack.org/keystone/keystone-14.0.1.tar.gz.asc
+Source99 : http://tarballs.openstack.org/keystone/keystone-14.1.0.tar.gz.asc
 Summary  : Lightweight multi-platform, multi-architecture assembler framework
 Group    : Development/Tools
 License  : Apache-2.0
@@ -82,6 +82,7 @@ BuildRequires : oslo.policy-python
 BuildRequires : oslo.service-python
 BuildRequires : oslo.utils-python
 BuildRequires : osprofiler
+BuildRequires : osprofiler-python
 BuildRequires : passlib-python
 BuildRequires : pbr
 BuildRequires : pip
@@ -152,14 +153,14 @@ python3 components for the keystone package.
 
 
 %prep
-%setup -q -n keystone-14.0.1
+%setup -q -n keystone-14.1.0
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1551034717
+export SOURCE_DATE_EPOCH=1554400548
 export MAKEFLAGS=%{?_smp_mflags}
 python3 setup.py build
 
@@ -169,6 +170,7 @@ export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 PYTHONPATH=%{buildroot}/usr/lib/python3.7/site-packages python3 setup.py test || :
 %install
+export MAKEFLAGS=%{?_smp_mflags}
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/share/package-licenses/keystone
 cp LICENSE %{buildroot}/usr/share/package-licenses/keystone/LICENSE
