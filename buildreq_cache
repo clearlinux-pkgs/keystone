@@ -1,5 +1,7 @@
-14.1.0
+15.0.0
 Mako-python
+PyJWT
+PyJWT-python
 Tempita-python
 alembic-python
 bcrypt-python
@@ -9,6 +11,7 @@ oslo.cache-python
 oslo.context-python
 oslo.log-python
 oslo.messaging-python
+oslo.upgradecheck-python
 osprofiler
 osprofiler-python
 passlib-python

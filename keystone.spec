@@ -5,12 +5,12 @@
 # Source0 file verified with key 0x1A541148054E9E38 (infra-root@openstack.org)
 #
 Name     : keystone
-Version  : 14.1.0
-Release  : 108
-URL      : http://tarballs.openstack.org/keystone/keystone-14.1.0.tar.gz
-Source0  : http://tarballs.openstack.org/keystone/keystone-14.1.0.tar.gz
+Version  : 15.0.0
+Release  : 109
+URL      : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
+Source0  : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
 Source1  : keystone.tmpfiles
-Source99 : http://tarballs.openstack.org/keystone/keystone-14.1.0.tar.gz.asc
+Source99 : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz.asc
 Summary  : Lightweight multi-platform, multi-architecture assembler framework
 Group    : Development/Tools
 License  : Apache-2.0
@@ -22,7 +22,7 @@ Requires: keystone-python3 = %{version}-%{release}
 Requires: Babel
 Requires: Flask
 Requires: Flask-RESTful
-Requires: Routes
+Requires: PyJWT
 Requires: SQLAlchemy
 Requires: WebOb
 Requires: bandit
@@ -44,6 +44,7 @@ Requires: oslo.messaging
 Requires: oslo.middleware
 Requires: oslo.policy
 Requires: oslo.serialization
+Requires: oslo.upgradecheck
 Requires: oslo.utils
 Requires: osprofiler
 Requires: passlib
@@ -60,6 +61,8 @@ Requires: sqlalchemy-migrate
 Requires: stevedore
 BuildRequires : Flask-RESTful
 BuildRequires : Mako-python
+BuildRequires : PyJWT
+BuildRequires : PyJWT-python
 BuildRequires : Tempita-python
 BuildRequires : alembic-python
 BuildRequires : bcrypt-python
@@ -80,6 +83,7 @@ BuildRequires : oslo.messaging-python
 BuildRequires : oslo.middleware-python
 BuildRequires : oslo.policy-python
 BuildRequires : oslo.service-python
+BuildRequires : oslo.upgradecheck-python
 BuildRequires : oslo.utils-python
 BuildRequires : osprofiler
 BuildRequires : osprofiler-python
@@ -153,14 +157,14 @@ python3 components for the keystone package.
 
 
 %prep
-%setup -q -n keystone-14.1.0
+%setup -q -n keystone-15.0.0
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1554400548
+export SOURCE_DATE_EPOCH=1554948801
 export MAKEFLAGS=%{?_smp_mflags}
 python3 setup.py build
 
@@ -187,12 +191,12 @@ install -m 0644 %{SOURCE1} %{buildroot}/usr/lib/tmpfiles.d/keystone.conf
 %files bin
 %defattr(-,root,root,-)
 /usr/bin/keystone-manage
+/usr/bin/keystone-status
 /usr/bin/keystone-wsgi-admin
 /usr/bin/keystone-wsgi-public
 
 %files config
 %defattr(-,root,root,-)
-%config /usr/etc/keystone/keystone-paste.ini
 %config /usr/etc/keystone/sso_callback_template.html
 /usr/lib/tmpfiles.d/keystone.conf
 
