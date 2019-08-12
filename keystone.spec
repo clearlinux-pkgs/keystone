@@ -6,16 +6,17 @@
 #
 Name     : keystone
 Version  : 15.0.0
-Release  : 111
+Release  : 112
 URL      : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
 Source1  : keystone.tmpfiles
-Source99 : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz.asc
-Summary  : Lightweight multi-platform, multi-architecture assembler framework
+Source2 : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz.asc
+Summary  : OpenStack Identity
 Group    : Development/Tools
 License  : Apache-2.0
 Requires: keystone-bin = %{version}-%{release}
 Requires: keystone-config = %{version}-%{release}
+Requires: keystone-data = %{version}-%{release}
 Requires: keystone-license = %{version}-%{release}
 Requires: keystone-python = %{version}-%{release}
 Requires: keystone-python3 = %{version}-%{release}
@@ -59,62 +60,103 @@ Requires: scrypt
 Requires: six
 Requires: sqlalchemy-migrate
 Requires: stevedore
+BuildRequires : Babel
+BuildRequires : Flask
 BuildRequires : Flask-RESTful
 BuildRequires : Mako-python
 BuildRequires : PyJWT
 BuildRequires : PyJWT-python
+BuildRequires : SQLAlchemy
 BuildRequires : Tempita-python
+BuildRequires : WebOb
+BuildRequires : WebTest
 BuildRequires : alembic-python
+BuildRequires : bandit
+BuildRequires : bcrypt
 BuildRequires : bcrypt-python
 BuildRequires : buildreq-distutils3
+BuildRequires : coverage-python
+BuildRequires : cryptography
 BuildRequires : defusedxml-python
+BuildRequires : dogpile.cache
 BuildRequires : dogpile.cache-python
 BuildRequires : extras
 BuildRequires : extras-python
+BuildRequires : jsonschema
 BuildRequires : jsonschema-python
 BuildRequires : keystonemiddleware
+BuildRequires : msgpack
 BuildRequires : msgpack-python
+BuildRequires : oauthlib
 BuildRequires : oauthlib-python
+BuildRequires : oslo.cache
 BuildRequires : oslo.cache-python
+BuildRequires : oslo.concurrency
+BuildRequires : oslo.config
+BuildRequires : oslo.context
 BuildRequires : oslo.context-python
+BuildRequires : oslo.db
 BuildRequires : oslo.db-python
+BuildRequires : oslo.i18n
+BuildRequires : oslo.log
 BuildRequires : oslo.log-python
+BuildRequires : oslo.messaging
 BuildRequires : oslo.messaging-python
+BuildRequires : oslo.middleware
 BuildRequires : oslo.middleware-python
+BuildRequires : oslo.policy
 BuildRequires : oslo.policy-python
+BuildRequires : oslo.serialization
 BuildRequires : oslo.service-python
+BuildRequires : oslo.upgradecheck
 BuildRequires : oslo.upgradecheck-python
+BuildRequires : oslo.utils
 BuildRequires : oslo.utils-python
+BuildRequires : oslotest
+BuildRequires : oslotest-python
 BuildRequires : osprofiler
 BuildRequires : osprofiler-python
+BuildRequires : passlib
 BuildRequires : passlib-python
 BuildRequires : pbr
 BuildRequires : pip
 BuildRequires : pluggy
 BuildRequires : prettytable
 BuildRequires : py-python
+BuildRequires : pycadf
 BuildRequires : pycadf-python
+BuildRequires : pymongo
 BuildRequires : pyrsistent-python
+BuildRequires : pysaml2
 BuildRequires : pysaml2-python
 BuildRequires : pytest
 BuildRequires : python-dev
 BuildRequires : python-editor-python
+BuildRequires : python-keystoneclient
+BuildRequires : python-memcached
+BuildRequires : pytz
+BuildRequires : scrypt
 BuildRequires : scrypt-python
 BuildRequires : setuptools
+BuildRequires : six
+BuildRequires : sqlalchemy-migrate
 BuildRequires : sqlalchemy-migrate-python
 BuildRequires : sqlparse
+BuildRequires : stestr
+BuildRequires : stestr-python
+BuildRequires : stevedore
 BuildRequires : tempest-python
 BuildRequires : tox
 BuildRequires : virtualenv
 
 %description
-This is a database migration repository.
-More information at
-https://git.openstack.org/cgit/openstack/sqlalchemy-migrate
+Team and repository tags
+        ========================
 
 %package bin
 Summary: bin components for the keystone package.
 Group: Binaries
+Requires: keystone-data = %{version}-%{release}
 Requires: keystone-config = %{version}-%{release}
 Requires: keystone-license = %{version}-%{release}
 
@@ -128,6 +170,14 @@ Group: Default
 
 %description config
 config components for the keystone package.
+
+
+%package data
+Summary: data components for the keystone package.
+Group: Data
+
+%description data
+data components for the keystone package.
 
 
 %package license
@@ -163,8 +213,13 @@ python3 components for the keystone package.
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
-export LANG=C
-export SOURCE_DATE_EPOCH=1554948801
+export LANG=C.UTF-8
+export SOURCE_DATE_EPOCH=1565631801
+export GCC_IGNORE_WERROR=1
+export CFLAGS="$CFLAGS -fno-lto "
+export FCFLAGS="$CFLAGS -fno-lto "
+export FFLAGS="$CFLAGS -fno-lto "
+export CXXFLAGS="$CXXFLAGS -fno-lto "
 export MAKEFLAGS=%{?_smp_mflags}
 python3 setup.py build
 
@@ -184,6 +239,11 @@ cat %{buildroot}/usr/lib/python3*/site-packages/*/requires.txt || :
 echo ----[ mark ]----
 mkdir -p %{buildroot}/usr/lib/tmpfiles.d
 install -m 0644 %{SOURCE1} %{buildroot}/usr/lib/tmpfiles.d/keystone.conf
+## install_append content
+install -d -m 755 %{buildroot}/usr/share/defaults/keystone
+install %{buildroot}/usr/etc/keystone/sso_callback_template.html %{buildroot}/usr/share/defaults/keystone/
+rm -rf %{buildroot}/usr/etc
+## install_append end
 
 %files
 %defattr(-,root,root,-)
@@ -197,8 +257,11 @@ install -m 0644 %{SOURCE1} %{buildroot}/usr/lib/tmpfiles.d/keystone.conf
 
 %files config
 %defattr(-,root,root,-)
-%config /usr/etc/keystone/sso_callback_template.html
 /usr/lib/tmpfiles.d/keystone.conf
+
+%files data
+%defattr(-,root,root,-)
+/usr/share/defaults/keystone/sso_callback_template.html
 
 %files license
 %defattr(0644,root,root,0755)

@@ -1,4 +1,4 @@
-#install -d -m 755 %{buildroot}/usr/share/defaults/keystone
+install -d -m 755 %{buildroot}/usr/share/defaults/keystone
 #install -p -D -m 644 etc/*.templates %{buildroot}/usr/share/defaults/keystone
 #install -p -D -m 644 etc/*.ini %{buildroot}/usr/share/defaults/keystone
 #install -p -D -m 644 etc/*.sample %{buildroot}/usr/share/defaults/keystone
@@ -11,3 +11,5 @@
 #install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
 #install -p -D -m 644 httpd/public.ini  %{buildroot}/usr/share/uwsgi/keystone
 #install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone
+install %{buildroot}/usr/etc/keystone/sso_callback_template.html %{buildroot}/usr/share/defaults/keystone/
+rm -rf %{buildroot}/usr/etc

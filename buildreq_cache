@@ -3,8 +3,10 @@ Mako-python
 PyJWT
 PyJWT-python
 Tempita-python
+WebTest
 alembic-python
 bcrypt-python
+coverage-python
 defusedxml-python
 keystonemiddleware
 oslo.cache-python
@@ -12,6 +14,8 @@ oslo.context-python
 oslo.log-python
 oslo.messaging-python
 oslo.upgradecheck-python
+oslotest
+oslotest-python
 osprofiler
 osprofiler-python
 passlib-python
@@ -20,4 +24,6 @@ python-editor-python
 scrypt-python
 sqlalchemy-migrate-python
 sqlparse
+stestr
+stestr-python
 tempest-python
