@@ -1,6 +1,0 @@
-#0002-Default-Keystone-HTTPD-configuration.patch
-# 0003-Integrate-OSprofiler-in-Keystone.patch # albertom: Does not apply
-#0005-Serve-keystone-via-nginx-with-uwsgi.patch
-#0006-Set-default-syslog.patch
-#0001-Remove-admin_token_auth.patch
-#nodep.patch
