@@ -6,7 +6,7 @@
 #
 Name     : keystone
 Version  : 15.0.0
-Release  : 112
+Release  : 113
 URL      : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -148,6 +148,7 @@ BuildRequires : stevedore
 BuildRequires : tempest-python
 BuildRequires : tox
 BuildRequires : virtualenv
+Patch1: 0001-Unfreeze-jsonschema.patch
 
 %description
 Team and repository tags
@@ -208,13 +209,14 @@ python3 components for the keystone package.
 
 %prep
 %setup -q -n keystone-15.0.0
+%patch1 -p1
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1565631801
+export SOURCE_DATE_EPOCH=1566919032
 export GCC_IGNORE_WERROR=1
 export CFLAGS="$CFLAGS -fno-lto "
 export FCFLAGS="$CFLAGS -fno-lto "

@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Patrick McCarty <patrick.mccarty@intel.com>
+Date: Tue, 27 Aug 2019 08:14:09 -0700
+Subject: [PATCH] Unfreeze jsonschema
+
+Signed-off-by: Patrick McCarty <patrick.mccarty@intel.com>
+---
+ keystone.egg-info/requires.txt | 2 +-
+ requirements.txt               | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/keystone.egg-info/requires.txt b/keystone.egg-info/requires.txt
+index e2265c4..1f0166c 100644
+--- a/keystone.egg-info/requires.txt
++++ b/keystone.egg-info/requires.txt
+@@ -30,7 +30,7 @@ oauthlib>=0.6.2
+ pysaml2>=4.5.0
+ PyJWT>=1.6.1
+ dogpile.cache>=0.6.2
+-jsonschema<3.0.0,>=2.6.0
++jsonschema
+ pycadf!=2.0.0,>=1.1.0
+ msgpack>=0.5.0
+ osprofiler>=1.4.0
+diff --git a/requirements.txt b/requirements.txt
+index e3de1c6..33bd864 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -37,7 +37,7 @@ oauthlib>=0.6.2 # BSD
+ pysaml2>=4.5.0
+ PyJWT>=1.6.1 # MIT
+ dogpile.cache>=0.6.2 # BSD
+-jsonschema<3.0.0,>=2.6.0 # MIT
++jsonschema
+ pycadf!=2.0.0,>=1.1.0 # Apache-2.0
+ msgpack>=0.5.0 # Apache-2.0
+ osprofiler>=1.4.0 # Apache-2.0
