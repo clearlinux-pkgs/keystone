@@ -6,11 +6,11 @@
 #
 Name     : keystone
 Version  : 15.0.0
-Release  : 115
+Release  : 116
 URL      : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
 Source1  : keystone.tmpfiles
-Source2 : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz.asc
+Source2  : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz.asc
 Summary  : OpenStack Identity
 Group    : Development/Tools
 License  : Apache-2.0
@@ -54,6 +54,7 @@ Requires: pycadf
 Requires: pymongo
 Requires: pysaml2
 Requires: python-keystoneclient
+Requires: python-ldap
 Requires: python-memcached
 Requires: pytz
 Requires: scrypt
@@ -132,6 +133,7 @@ BuildRequires : pysaml2-python
 BuildRequires : pytest
 BuildRequires : python-editor-python
 BuildRequires : python-keystoneclient
+BuildRequires : python-ldap
 BuildRequires : python-memcached
 BuildRequires : python3-dev
 BuildRequires : pytz
@@ -209,6 +211,7 @@ python3 components for the keystone package.
 
 %prep
 %setup -q -n keystone-15.0.0
+cd %{_builddir}/keystone-15.0.0
 %patch1 -p1
 
 %build
@@ -216,7 +219,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1569355471
+export SOURCE_DATE_EPOCH=1576011273
 export GCC_IGNORE_WERROR=1
 export CFLAGS="$CFLAGS -fno-lto "
 export FCFLAGS="$CFLAGS -fno-lto "
@@ -229,12 +232,12 @@ python3 setup.py build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
-PYTHONPATH=%{buildroot}/usr/lib/python3.7/site-packages python3 setup.py test || :
+PYTHONPATH=%{buildroot}$(python -c "import sys; print(sys.path[-1])") python setup.py test || :
 %install
 export MAKEFLAGS=%{?_smp_mflags}
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/share/package-licenses/keystone
-cp LICENSE %{buildroot}/usr/share/package-licenses/keystone/LICENSE
+cp %{_builddir}/keystone-15.0.0/LICENSE %{buildroot}/usr/share/package-licenses/keystone/294b43b2cec9919063be1a3b49e8722648424779
 python3 -tt setup.py build  install --root=%{buildroot}
 echo ----[ mark ]----
 cat %{buildroot}/usr/lib/python3*/site-packages/*/requires.txt || :
@@ -243,6 +246,18 @@ mkdir -p %{buildroot}/usr/lib/tmpfiles.d
 install -m 0644 %{SOURCE1} %{buildroot}/usr/lib/tmpfiles.d/keystone.conf
 ## install_append content
 install -d -m 755 %{buildroot}/usr/share/defaults/keystone
+#install -p -D -m 644 etc/*.templates %{buildroot}/usr/share/defaults/keystone
+#install -p -D -m 644 etc/*.ini %{buildroot}/usr/share/defaults/keystone
+#install -p -D -m 644 etc/*.sample %{buildroot}/usr/share/defaults/keystone
+#install -p -D -m 644 etc/*.json %{buildroot}/usr/share/defaults/keystone
+#install -p -D -m 755 tools/sample_data.sh %{buildroot}%{_datadir}/keystone/sample_data.sh
+#install -p -D -m 644 httpd/wsgi-keystone.conf %{buildroot}%{_datadir}/keystone/
+#for i in %{buildroot}/usr/share/defaults/keystone/*.sample; do mv $i ${i%.*}; done;
+#install -m 0755 -d %{buildroot}/usr/share/defaults/httpd/conf.d
+
+#install -m 0755 -d %{buildroot}/usr/share/uwsgi/keystone
+#install -p -D -m 644 httpd/public.ini  %{buildroot}/usr/share/uwsgi/keystone
+#install -p -D -m 644 httpd/admin.ini  %{buildroot}/usr/share/uwsgi/keystone
 install %{buildroot}/usr/etc/keystone/sso_callback_template.html %{buildroot}/usr/share/defaults/keystone/
 rm -rf %{buildroot}/usr/etc
 ## install_append end
@@ -267,7 +282,7 @@ rm -rf %{buildroot}/usr/etc
 
 %files license
 %defattr(0644,root,root,0755)
-/usr/share/package-licenses/keystone/LICENSE
+/usr/share/package-licenses/keystone/294b43b2cec9919063be1a3b49e8722648424779
 
 %files python
 %defattr(-,root,root,-)
