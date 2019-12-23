@@ -6,7 +6,7 @@
 #
 Name     : keystone
 Version  : 15.0.0
-Release  : 116
+Release  : 117
 URL      : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
 Source0  : http://tarballs.openstack.org/keystone/keystone-15.0.0.tar.gz
 Source1  : keystone.tmpfiles
@@ -151,6 +151,7 @@ BuildRequires : tempest-python
 BuildRequires : tox
 BuildRequires : virtualenv
 Patch1: 0001-Unfreeze-jsonschema.patch
+Patch2: CVE-2019-19687.patch
 
 %description
 Team and repository tags
@@ -213,18 +214,19 @@ python3 components for the keystone package.
 %setup -q -n keystone-15.0.0
 cd %{_builddir}/keystone-15.0.0
 %patch1 -p1
+%patch2 -p1
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1576011273
+export SOURCE_DATE_EPOCH=1577124245
 export GCC_IGNORE_WERROR=1
-export CFLAGS="$CFLAGS -fno-lto "
-export FCFLAGS="$CFLAGS -fno-lto "
-export FFLAGS="$CFLAGS -fno-lto "
-export CXXFLAGS="$CXXFLAGS -fno-lto "
+export CFLAGS="$CFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
+export FCFLAGS="$CFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
+export FFLAGS="$CFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
+export CXXFLAGS="$CXXFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
 export MAKEFLAGS=%{?_smp_mflags}
 python3 setup.py build
 
